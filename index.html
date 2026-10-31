@@ -1,0 +1,2246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>General English II Exam Portal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+  :root { --bg: #f1f5f9; --fg: #0f172a; --band: #0f172a; color-scheme: light; }
+  body { background: var(--bg); color: var(--fg); min-height: 100vh; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--band); }
+  header { top: env(safe-area-inset-top, 0px); }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  select, input, textarea, button { font-family: inherit; }
+</style>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+const mk = (d) => ({ className = '' }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+);
+const BookOpen = mk(<><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></>);
+const Clock = mk(<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>);
+const CheckCircle = mk(<><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></>);
+const Eye = mk(<><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></>);
+const EyeOff = mk(<><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></>);
+const ChevronRight = mk(<path d="m9 18 6-6-6-6"/>);
+const Award = mk(<><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></>);
+const ArrowLeft = mk(<><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>);
+const RefreshCw = mk(<><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></>);
+
+// --- DATABASE CONTAINING ALL 7 COMPLETE EXAM SETS ---
+const EXAM_DATABASE = [
+  {
+    id: "set1",
+    title: "Final Examination – Set 1",
+    subtitle: "Year 1, Semester 2",
+    subject: "General English II (Units 7–12)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its corresponding definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. historian" },
+            { id: 2, text: "2. sore throat" },
+            { id: 3, text: "3. compound noun" },
+            { id: 4, text: "4. pregnant" },
+            { id: 5, text: "5. widow" },
+            { id: 6, text: "6. antibiotics" },
+            { id: 7, text: "7. search engine" },
+            { id: 8, text: "8. phishing" },
+            { id: 9, text: "9. tourism" },
+            { id: 10, text: "10. food poisoning" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A woman whose husband has died." },
+            { id: "B", text: "B. Made up of two or more words joined together (e.g., cell phone)." },
+            { id: "C", text: "C. A medical condition of carrying a developing baby in the womb." },
+            { id: "D", text: "D. Pain or inflammation in the front part of the neck/throat area." },
+            { id: "E", text: "E. A person who studies and writes about past events and history." },
+            { id: "F", text: "F. A search engine that helps users find information on the web." },
+            { id: "G", text: "G. Medicines used to kill or stop the growth of harmful bacteria." },
+            { id: "H", text: "H. The activity of traveling to places for pleasure and visiting sights." },
+            { id: "I", text: "I. An illness caused by eating food that contains harmful bacteria." },
+            { id: "J", text: "J. Fraudulent emails or messages sent to trick people into giving personal data." }
+          ],
+          answers: { 1: "E", 2: "D", 3: "B", 4: "C", 5: "A", 6: "G", 7: "F", 8: "J", 9: "H", 10: "I" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the paragraph using the words in the box. Use each word ONCE. (10 pts)",
+          box: ["A. search engine", "B. pregnant", "C. antibiotics", "D. sore throat", "E. compound noun", "F. widowed", "G. tourism", "H. food poisoning", "I. historian", "J. phishing"],
+          passage: "Modern Life and Digital Communication\nIn today's digital era, people use a popular (1) _____ to find quick information online. However, users must be cautious of (2) _____ scams designed to steal private details. Language learners often study a (3) _____ like \"laptop\" or \"text message\" to expand their vocabulary. Beyond technology, health issues still affect our daily lives; for example, a person with a bad (4) _____ or severe (5) _____ from spoiled food may need to take prescribed (6) _____ from a doctor. Family histories also reflect personal changes—some individuals become (7) _____ after losing a partner, while others prepare to start a family when they become (8) _____. In academic fields, an expert (9) _____ might research how the growth of international (10) _____ has transformed societies over time.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "J", 3: "E", 4: "D", 5: "H", 6: "C", 7: "F", 8: "B", 9: "I", 10: "G" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Complete each sentence with an appropriate word from Units 7–12. Use one word or phrase in each blank. (10 pts)",
+          questions: [
+            "1. An expert who studies or writes about the past is called a ________________.",
+            "2. A pair of words joined together to form one word (like petrol station) is a ________________.",
+            "3. If a doctor prescribes medicine to fight a bacterial infection, you need to take ________________.",
+            "4. When a woman is expecting a baby, she is ________________.",
+            "5. A woman whose husband has passed away is a ________________.",
+            "6. The first internet program built to search database archives in 1989 was named ________________.",
+            "7. A medical pain in the throat area caused by a cold or virus is a ________________.",
+            "8. Fraudulent online tricks designed to steal passwords or bank details are known as ________________.",
+            "9. The industry of providing services like hotels and tours for travelers is ________________.",
+            "10. Illness caused by eating contaminated or bad food is called ________________."
+          ],
+          answers: ["historian", "compound noun", "antibiotics", "pregnant", "widow", "Archie", "sore throat", "phishing", "tourism", "food poisoning"]
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Complete the sentences using the correct form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. I ________________ (work) for this company for over five years. (Present Perfect)",
+            "2. The first mobile phone call ________________ (make) in 1973 by Martin Cooper. (Past Passive)",
+            "3. If I ________________ (be) you, I would study harder for the final exam. (Second Conditional)",
+            "4. They ________________ (learn) English continuous lessons since eight o'clock. (Present Perfect Continuous)",
+            "5. When we arrived at the cinema, the movie ________________ (already / start). (Past Perfect)",
+            "6. English ________________ (speak) by millions of people all over the world. (Present Passive)",
+            "7. You ________________ (mustn't / don't have to) park here; it is completely illegal.",
+            "8. If it rains tomorrow, we ________________ (stay) at home. (First Conditional)",
+            "9. She ________________ (not finish) her project work yet. (Present Perfect)",
+            "10. While I was walking to school, I ________________ (meet) my old friend. (Past Simple)"
+          ],
+          answers: ["have worked", "was made", "were", "have been learning", "had already started", "is spoken", "mustn't", "will stay", "hasn't finished", "met"]
+        },
+        mcq: {
+          pts: 10,
+          instruction: "B. Choose the correct answer. (10 pts)",
+          questions: [
+            { id: 1, text: "1. She has lived in Phnom Penh ______ 2021.", options: ["A. for", "B. since", "C. during", "D. from"] },
+            { id: 2, text: "2. Mobile phones ______ used by billions of people worldwide.", options: ["A. is", "B. are", "C. was", "D. were"] },
+            { id: 3, text: "3. You ______ wear a helmet when riding a motorcycle. It is the law.", options: ["A. mustn't", "B. don't have to", "C. have to", "D. shouldn't"] },
+            { id: 4, text: "4. If I had a lot of money, I ______ buy a big house.", options: ["A. will", "B. would", "C. can", "D. must"] },
+            { id: 5, text: "5. She ______ her homework before she went to bed last night.", options: ["A. has finished", "B. had finished", "C. finishes", "D. is finishing"] },
+            { id: 6, text: "6. Students ______ bring their phones into the exam room. It is strictly forbidden.", options: ["A. don't have to", "B. mustn't", "C. should", "D. doesn't have to"] },
+            { id: 7, text: "7. You ______ eat too much junk food if you want to stay healthy.", options: ["A. shouldn't", "B. must", "C. have to", "D. don't have to"] },
+            { id: 8, text: "8. The novel ______ written by a famous author in 1998.", options: ["A. is", "B. was", "C. has been", "D. were"] },
+            { id: 9, text: "9. You ______ pay for the entrance ticket; it is completely free today.", options: ["A. mustn't", "B. don't have to", "C. shouldn't", "D. had to"] },
+            { id: 10, text: "10. If you ______ hard, you will pass the final examination easily.", options: ["A. study", "B. studied", "C. will study", "D. have studied"] }
+          ],
+          answers: { 1: "B", 2: "B", 3: "C", 4: "B", 5: "B", 6: "B", 7: "A", 8: "B", 9: "B", 10: "A" }
+        },
+        rearrange: {
+          pts: 10,
+          instruction: "C. Rearrange the words to make correct grammatical sentences. Write the complete sentence on the line. (10 pts)",
+          questions: [
+            "1. worked / has / she / for / three years / here .",
+            "2. spoken / English / is / all over / the world .",
+            "3. rich / were / if / I / travel / I / would / the world .",
+            "4. mustn't / class / students / use / in / phones / their .",
+            "5. left / train / had / the / I / arrived / when .",
+            "6. have / you / to / uniform / wear / a / school / at .",
+            "7. should / see / a / doctor / you / feel / sick / if / you .",
+            "8. made / in / 1973 / was / phone / first / mobile / the .",
+            "9. learning / she / English / has / been / for / months / three .",
+            "10. don't / we / have / to / go / to / school / tomorrow ."
+          ],
+          answers: [
+            "She has worked here for three years.",
+            "English is spoken all over the world.",
+            "If I were rich, I would travel the world.",
+            "Students mustn't use their phones in class.",
+            "The train had left when I arrived.",
+            "You have to wear a uniform at school.",
+            "You should see a doctor if you feel sick.",
+            "The first mobile phone was made in 1973.",
+            "She has been learning English for three months.",
+            "We don't have to go to school tomorrow."
+          ]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "tf",
+        instruction: "Read the passage carefully and indicate whether each statement is true (T) or false (F). (20 pts)",
+        passageTitle: "The Evolution of Modern Communication",
+        passage: "Technology has completely transformed how people communicate with one another across the globe. In 1973, the first mobile phone call was made in New York City by an engineer named Martin Cooper. His early mobile phone was very large and weighed over one kilogram, which was vastly different from today's lightweight smartphones.\n\nOver the last few decades, digital communication has expanded rapidly. The first text message was sent in 1992, and by 2002, camera phones were introduced to the public. As internet access expanded into millions of homes, people began searching for ways to connect and reconnect with friends. In 1995, Classmates.com became one of the earliest social networking platforms, allowing former students to get in touch with old schoolmates. Later, in 2004, Facebook was created by university students, quickly growing into a global network with hundreds of millions of active users.\n\nIn addition to social networks, search engines transformed how people access information. In 1989, Alan Emtage built \"Archie,\" which is widely recognized as the world's first search engine. Today, billions of online queries are answered daily by modern search platforms. While digital tools make communication faster and easier, experts warn that users should be careful with their private data and avoid online scams.",
+        statements: [
+          "1. The first mobile phone call was made in 1973 by Martin Cooper.",
+          "2. Martin Cooper's original phone was lightweight and small like modern smartphones.",
+          "3. Camera phones were introduced to the market before the first text message was sent.",
+          "4. The first text message was sent in 1992.",
+          "5. Classmates.com was established in 1995 to help former schoolmates connect.",
+          "6. Facebook was founded in 2004 by university students.",
+          "7. Alan Emtage created \"Archie,\" which was one of the earliest search engines.",
+          "8. \"Archie\" was created in the year 2004.",
+          "9. Modern digital communication tools make sharing information slower than in the past.",
+          "10. Experts advise internet users to protect their private data from online scams."
+        ],
+        answers: ["T", "F", "F", "T", "T", "T", "T", "F", "F", "T"]
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE of these three topics to write a paragraph around 150 words. (20 pts)",
+        topics: [
+          { id: 1, title: "Topic 1: An Important Travel Experience in My Life", desc: "Write about a memorable trip or journey you have taken. Explain where you went, what you did, how you felt, and why it was an important experience for you. (Use Present Perfect and Past Simple tenses where appropriate)." },
+          { id: 2, title: "Topic 2: Advice for University Students", desc: "Write a paragraph giving advice to university students about how to study successfully and manage their academic responsibilities. Use expressions such as should, shouldn't, must, mustn't, have to, and don't have to where appropriate." },
+          { id: 3, title: "Topic 3: Pros and Cons of Modern Technology", desc: "Write a paragraph discussing the advantages and disadvantages of using modern technology in daily life. Explain how technology helps people and what problems it might cause. (Use passive voice structures where appropriate)." }
+        ]
+      }
+    },
+    answerKeyTitle: "ANSWER KEY (អត្រាកំណែសម្រាប់ផ្ទៀងផ្ទាត់)"
+  },
+  {
+    id: "set2",
+    title: "Final Examination – Set 2",
+    subtitle: "Year 1, Semester 2",
+    subject: "General English II (Units 7–12)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its corresponding definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. economist" },
+            { id: 2, text: "2. archaeologist" },
+            { id: 3, text: "3. divorced" },
+            { id: 4, text: "4. malaria" },
+            { id: 5, text: "5. diarrhoea" },
+            { id: 6, text: "6. blog" },
+            { id: 7, text: "7. hacker" },
+            { id: 8, text: "8. multimedia" },
+            { id: 9, text: "9. orphan" },
+            { id: 10, text: "10. funeral" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A person who studies ancient societies by examining buildings, objects, and remains." },
+            { id: "B", text: "B. An expert in economics and how money/resources are used." },
+            { id: "C", text: "C. Legally dissolved a marriage." },
+            { id: "D", text: "D. A viral or bacterial condition causing loose bowels and frequent watery stools." },
+            { id: "E", text: "E. A serious disease spread by mosquitoes, common in tropical regions." },
+            { id: "F", text: "F. A regular record of thoughts and information posted on a web site." },
+            { id: "G", text: "G. Someone who breaks into computer systems illegally to steal data." },
+            { id: "H", text: "H. Using more than one medium of expression or communication (e.g., audio, video)." },
+            { id: "I", text: "I. A child whose parents have died." },
+            { id: "J", text: "J. A ceremony held for a dead person before burial or cremation." }
+          ],
+          answers: { 1: "B", 2: "A", 3: "C", 4: "E", 5: "D", 6: "F", 7: "G", 8: "H", 9: "I", 10: "J" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the paragraph using the words in the box. Use each word ONCE. (10 pts)",
+          box: ["A. economist", "B. archaeologist", "C. divorced", "D. diarrhoea", "E. blog", "F. hacker", "G. multimedia", "H. funeral", "I. orphan", "J. malware"],
+          passage: "Life Events and Digital Challenges\nThroughout life, individuals experience various personal and professional milestones. A trained (1) _____ may analyze global market trends, while an expert (2) _____ uncovers ancient artifacts buried deep underground. On a personal level, some couples find their relationship failing and officially become (3) _____. Tragically, children who lose both parents early in life become an (4) _____, and family members eventually gather to pay their final respects at a solemn (5) _____. In the digital sphere, maintaining security is equally vital. A malicious (6) _____ might attempt to breach network defenses using dangerous (7) _____. To share daily updates with the public, many writers run an active personal (8) _____. Furthermore, modern web design relies heavily on (9) _____ content featuring images and video clips. Finally, travelers must be careful with what they eat abroad to avoid severe stomach issues like (10) _____.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "B", 3: "C", 4: "I", 5: "H", 6: "F", 7: "J", 8: "E", 9: "G", 10: "D" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Complete each sentence with an appropriate word from Units 7–12. Use one word or phrase in each blank. (10 pts)",
+          questions: [
+            "1. An expert who studies the financial systems and production of wealth is an ________________.",
+            "2. A researcher who digs up historical ruins and ancient objects is an ________________.",
+            "3. When a legal marriage is dissolved and ended, the couple is considered ________________.",
+            "4. A medical condition involving frequent liquid bowel movements is known as ________________.",
+            "5. An online personal journal or website where authors post regular entries is a ________________.",
+            "6. A person who breaks into secure computer networks without authorization is a ________________.",
+            "7. The integration of text, graphics, audio, and video into a single system is called ________________.",
+            "8. A young person who has lost both mother and father is an ________________.",
+            "9. The ceremony associated with burying or cremating a deceased person is a ________________.",
+            "10. Software designed specifically to damage or disrupt computer systems is ________________."
+          ],
+          answers: ["economist", "archaeologist", "divorced", "diarrhoea", "blog", "hacker", "multimedia", "orphan", "funeral", "malware"]
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Complete the sentences using the correct form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. I ________________ (never / be) to South America in my entire life. (Present Perfect)",
+            "2. The first blog ________________ (create) by Justin Hall in 1994. (Past Passive)",
+            "3. If I ________________ (have) a lot of free time today, I would read a novel. (Second Conditional)",
+            "4. She ________________ (wait) for the bus for over forty minutes. (Present Perfect Continuous)",
+            "5. By the time we arrived at the theatre, the play ________________ (start). (Past Perfect)",
+            "6. Cameras ________________ (sell) in this shop since 2002. (Present Perfect Passive)",
+            "7. You ________________ (must / mustn't) tell anyone this secret; it is strictly confidential.",
+            "8. If the weather is nice tomorrow, we ________________ (go) for a picnic. (First Conditional)",
+            "9. They ________________ (not visit) their grandparents yet this month. (Present Perfect with 'yet')",
+            "10. While he was cooking dinner, the phone ________________ (ring). (Past Simple)"
+          ],
+          answers: ["have never been", "was created", "had", "has been waiting", "had started", "have been sold", "mustn't", "will go", "haven't visited", "rang"]
+        },
+        mcq: {
+          pts: 10,
+          instruction: "B. Choose the correct answer. (10 pts)",
+          questions: [
+            { id: 1, text: "1. I have known my best friend ______ five years.", options: ["A. since", "B. for", "C. during", "D. from"] },
+            { id: 2, text: "2. The first text message ______ sent in 1992.", options: ["A. is", "B. was", "C. has been", "D. were"] },
+            { id: 3, text: "3. You ______ submit your assignment by Friday; it is a mandatory rule.", options: ["A. don't have to", "B. have to", "C. mustn't", "D. shouldn't"] },
+            { id: 4, text: "4. If she studied harder, she ______ pass the exam easily.", options: ["A. will", "B. would", "C. can", "D. must"] },
+            { id: 5, text: "5. He was very tired because he ______ working all night.", options: ["A. has been", "B. had been", "C. was", "D. is"] },
+            { id: 6, text: "6. Students ______ bring unauthorized items into the examination hall.", options: ["A. don't have to", "B. mustn't", "C. should", "D. needn't"] },
+            { id: 7, text: "7. You look unwell. You ______ go home and rest.", options: ["A. shouldn't", "B. should", "C. mustn't", "D. has to"] },
+            { id: 8, text: "8. Many new digital features ______ added to modern smartphones over the years.", options: ["A. are", "B. were", "C. have been", "D. will be"] },
+            { id: 9, text: "9. You ______ pay for parking on Sundays because it is completely free.", options: ["A. mustn't", "B. don't have to", "C. should", "D. had to"] },
+            { id: 10, text: "10. If it rains this afternoon, we ______ stay indoors.", options: ["A. will", "B. would", "C. did", "D. have"] }
+          ],
+          answers: { 1: "B", 2: "B", 3: "B", 4: "B", 5: "B", 6: "B", 7: "B", 8: "C", 9: "B", 10: "A" }
+        },
+        rearrange: {
+          pts: 10,
+          instruction: "C. Rearrange the words to make correct grammatical sentences. Write the complete sentence on the line. (10 pts)",
+          questions: [
+            "1. written / has / a book / my brother / three years / for / over .",
+            "2. sent / in 1989 / first / message / the / text / was .",
+            "3. a millionaire / were / I / would / I / travel / if .",
+            "4. smoke / in / people / public / mustn't / places .",
+            "5. had / the / left / before / station / train / we / reached .",
+            "6. have / to / early / get / tomorrow / you / do / ?",
+            "7. see / you / a / dentist / should / toothache / have / a / if / you .",
+            "8. sold / have / camera / since / 2002 / phones / been .",
+            "9. learning / been / she / has / French / months / for / six .",
+            "10. have / to / we / pay / don't / ticket / the / for ."
+          ],
+          answers: [
+            "My brother has written a book for over three years.",
+            "The first text message was sent in 1989.",
+            "If I were a millionaire, I would travel.",
+            "People mustn't smoke in public places.",
+            "The train had left before we reached the station.",
+            "Do you have to get up early tomorrow?",
+            "You should see a dentist if you have a toothache.",
+            "Camera phones have been sold since 2002.",
+            "She has been learning French for six months.",
+            "We don't have to pay for the ticket."
+          ]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "tf",
+        instruction: "Read the passage carefully and indicate whether each statement is true (T) or false (F). (20 pts)",
+        passageTitle: "The Story of Simon Gandolfi",
+        passage: "Simon Gandolfi is a remarkable traveler from Herefordshire, England. Despite being 76 years old, suffering from a bad back, and having survived two heart attacks, Simon decided to undertake an incredible journey. He wanted to prove to his wife, Bernadette, and their two sons that he could ride the entire length of America on a small \"pizza delivery bike\"—a Honda 125cc motorbike.\n\nHe purchased his Honda 125cc new in Mexico for just £1,200 because it was fuel-efficient and practical. Having not ridden a motorcycle for forty years, he felt terrified by city freeway traffic at first, but a helpful police officer guided him onto a safe route. His 14,000-mile journey took him from Veracruz through South America, across high altitudes in Bolivia (up to 4,700 meters), through the Amazon jungle, and finally up to Pennsylvania, USA. Along the way, he faced minor challenges such as being briefly kidnapped in Venezuela and spending five weeks recovering from a broken leg in a Chilean hotel after sliding on an icy road. Most nights, he slept in inexpensive family-run hotels. After completing this grueling six-month expedition, Simon proved that determination matters more than age, and he soon began planning a similar six-month motorbike trip across India.",
+        statements: [
+          "1. Simon Gandolfi is 76 years old and lives in England.",
+          "2. Simon has never experienced any serious health problems in his life.",
+          "3. He rode a large, expensive racing motorcycle across America.",
+          "4. Simon bought his Honda 125cc motorbike new in Mexico for £1,200.",
+          "5. He had ridden motorcycles regularly every year prior to this journey.",
+          "6. His journey covered a total distance of 14,000 miles.",
+          "7. Simon rode at heights reaching 4,700 meters in Bolivia.",
+          "8. He did not encounter any dangerous or unexpected events during his travels.",
+          "9. The entire journey across America took six months to complete.",
+          "10. After finishing his American trip, Simon planned to travel to India by motorbike."
+        ],
+        answers: ["T", "F", "F", "T", "F", "T", "T", "F", "T", "T"]
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE of these three topics to write a paragraph around 150 words. (20 pts)",
+        topics: [
+          { id: 1, title: "Topic 1: A Memorable Journey or Travel Adventure", desc: "Write about an exciting trip or adventure you have experienced. Describe where you went, what challenges you faced, what you saw, and how you felt about the journey. (Use Present Perfect and Past Simple tenses)." },
+          { id: 2, title: "Topic 2: Giving Advice on Personal Health and Fitness", desc: "Write a paragraph giving useful advice to people on how to maintain a healthy lifestyle, avoid common illnesses, and stay fit. Use modal verbs such as should, shouldn't, must, mustn't, have to, and don't have to." },
+          { id: 3, title: "Topic 3: A Retelling of a Surprising Encounter", desc: "Write a short narrative story about an unexpected meeting with an old friend or a strange event that happened to you in the past. Use Narrative Tenses (Past Simple, Past Continuous, Past Perfect) and appropriate conjunctions." }
+        ]
+      }
+    },
+    answerKeyTitle: "ANSWER KEY (អត្រាកំណែសម្រាប់វិញ្ញាសាទី ២)"
+  },
+  {
+    id: "set3",
+    title: "Final Examination – Set 3",
+    subtitle: "Year 1, Semester 2",
+    subject: "General English II (Units 7–12)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its corresponding definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. politician" },
+            { id: 2, text: "2. lawyer" },
+            { id: 3, text: "3. allergic" },
+            { id: 4, text: "4. malaria" },
+            { id: 5, text: "5. diarrhoea" },
+            { id: 6, text: "6. spam" },
+            { id: 7, text: "7. hacker" },
+            { id: 8, text: "8. orphan" },
+            { id: 9, text: "9. widower" },
+            { id: 10, text: "10. cemetery" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A professional person qualified to practice law and represent clients." },
+            { id: "B", text: "B. A person who is professionally involved in politics or government office." },
+            { id: "C", text: "C. Having a medical reaction to certain substances like food, dust, or cats." },
+            { id: "D", text: "D. A severe disease caused by mosquito bites in tropical areas." },
+            { id: "E", text: "E. A condition involving frequent watery bowel movements." },
+            { id: "F", text: "F. Irrelevant or unsolicited messages sent over the internet to large numbers." },
+            { id: "G", text: "G. A person who gains unauthorized access to computer files or networks." },
+            { id: "H", text: "H. A child who has lost both mother and father." },
+            { id: "I", text: "I. A man whose wife has died and who has not remarried." },
+            { id: "J", text: "J. A burial ground where deceased people are laid to rest." }
+          ],
+          answers: { 1: "B", 2: "A", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G", 8: "H", 9: "I", 10: "J" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the paragraph using the words in the box. Use each word ONCE. (10 pts)",
+          box: ["A. politician", "B. lawyer", "C. allergic", "D. malaria", "E. diarrhoea", "F. spam", "G. hacker", "H. orphan", "I. widower", "J. cemetery"],
+          passage: "Life Challenges and Digital Risks\nNavigating modern society presents various social and health challenges. A well-known (1) _____ often proposes new public policies, while a qualified (2) _____ defends clients in court. On the health front, individuals must watch out for dangerous illnesses like (3) _____ when traveling to tropical regions, or manage stomach infections that lead to painful (4) _____. Furthermore, some people are physically (5) _____ to specific animals or foods. In personal relationships, losing a beloved wife leaves a man as a (6) _____, and family members eventually visit a quiet (7) _____ to honor departed relatives. In the technological domain, internet users are frequently annoyed by unwanted advertising emails known as (8) _____. Additionally, a malicious (9) _____ might try to break into corporate databases. Finally, protecting vulnerable children who become an (10) _____ remains an important community responsibility.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "B", 3: "D", 4: "E", 5: "C", 6: "I", 7: "J", 8: "F", 9: "G", 10: "H" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Complete each sentence with an appropriate word from Units 7–12. Use one word or phrase in each blank. (10 pts)",
+          questions: [
+            "1. A person engaged in government policy-making and public office is a ________________.",
+            "2. A legal professional who gives advice and represents people in court is a ________________.",
+            "3. Having a hypersensitive physical reaction to certain food or pollen means you are ________________.",
+            "4. A dangerous infectious disease transmitted by mosquitoes in warm climates is ________________.",
+            "5. An intestinal ailment causing frequent watery stool is called ________________.",
+            "6. Unsolicited bulk emails sent over the digital network are referred to as ________________.",
+            "7. An unauthorized intruder who breaks into secure computer systems is a ________________.",
+            "8. A young boy or girl who has lost both parents is an ________________.",
+            "9. A man whose spouse has passed away is known as a ________________.",
+            "10. The land or grounds set apart for burying the dead is a ________________."
+          ],
+          answers: ["politician", "lawyer", "allergic", "malaria", "diarrhoea", "spam", "hacker", "orphan", "widower", "cemetery"]
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Complete the sentences using the correct form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. I ________________ (already / finish) reading my English textbook. (Present Perfect)",
+            "2. The first commercial search engine ________________ (launch) in the 1990s. (Past Passive)",
+            "3. If I ________________ (be) the president, I would work for world peace. (Second Conditional)",
+            "4. She ________________ (study) at the university for three years now. (Present Perfect Continuous)",
+            "5. When they got home, someone ________________ (break) into their house. (Past Perfect)",
+            "6. Text messages ________________ (send) in the millions every single day. (Present Simple Passive)",
+            "7. You ________________ (must / mustn't) touch electrical wires with wet hands; it is very dangerous.",
+            "8. If you don't wear a coat outside, you ________________ (catch) a cold. (First Conditional)",
+            "9. We ________________ (not see) our friends since last summer. (Present Perfect with 'since')",
+            "10. While she was cleaning the kitchen, the lights ________________ (go out). (Past Simple)"
+          ],
+          answers: ["have already finished", "was launched", "were", "has been studying", "had broken", "are sent", "mustn't", "will catch", "haven't seen", "went out"]
+        },
+        mcq: {
+          pts: 10,
+          instruction: "B. Choose the correct answer. (10 pts)",
+          questions: [
+            { id: 1, text: "1. He has worked at this bank ______ 2018.", options: ["A. for", "B. since", "C. during", "D. from"] },
+            { id: 2, text: "2. The first computer virus called Creeper ______ detected in the early 1970s.", options: ["A. is", "B. was", "C. has been", "D. were"] },
+            { id: 3, text: "3. You ______ wear formal clothes to the office; casual wear is not allowed.", options: ["A. don't have to", "B. have to", "C. mustn't", "D. shouldn't"] },
+            { id: 4, text: "4. If she had more free time, she ______ learn how to play the piano.", options: ["A. will", "B. would", "C. can", "D. must"] },
+            { id: 5, text: "5. They were exhausted because they ______ running for two hours.", options: ["A. have been", "B. had been", "C. were", "D. are"] },
+            { id: 6, text: "6. Drivers ______ exceed the speed limit on city roads.", options: ["A. don't have to", "B. mustn't", "C. should", "D. needn't"] },
+            { id: 7, text: "7. You look very pale. You ______ see a doctor immediately.", options: ["A. shouldn't", "B. should", "C. mustn't", "D. have to"] },
+            { id: 8, text: "8. Many amazing applications ______ added to smartphones over recent years.", options: ["A. are", "B. were", "C. have been", "D. will be"] },
+            { id: 9, text: "9. You ______ bring your own lunch because food is provided at the conference.", options: ["A. mustn't", "B. don't have to", "C. should", "D. had to"] },
+            { id: 10, text: "10. If we miss the last bus, we ______ take a taxi home.", options: ["A. will", "B. would", "C. did", "D. have"] }
+          ],
+          answers: { 1: "B", 2: "B", 3: "B", 4: "B", 5: "B", 6: "B", 7: "B", 8: "C", 9: "B", 10: "A" }
+        },
+        rearrange: {
+          pts: 10,
+          instruction: "C. Rearrange the words to make correct grammatical sentences. Write the complete sentence on the line. (10 pts)",
+          questions: [
+            "1. English / learning / has / she / been / months / for / six .",
+            "2. built / museum / the / in Los Angeles / was / Getty / J. Paul .",
+            "3. rich / were / if / I / buy / a mansion / I / would .",
+            "4. smoke / rooms / in / students / mustn't / classroom .",
+            "5. arrived / before / airport / had / left / the / we / plane / the .",
+            "6. have / uniform / do / wear / you / to / a / ?",
+            "7. rest / should / take / you / a / feel / you / tired / if .",
+            "8. sold / been / have / camera / 2002 / phones / since .",
+            "9. waiting / have / they / been / bus / for / the / hours / two .",
+            "10. have / pay / we / don't / service / for / the ."
+          ],
+          answers: [
+            "She has been learning English for six months.",
+            "The Getty museum was built in Los Angeles.",
+            "If I were rich, I would buy a mansion.",
+            "Students mustn't smoke in the classroom.",
+            "The plane had left before we arrived at the airport.",
+            "Do you have to wear a uniform?",
+            "You should take a rest if you feel tired.",
+            "Camera phones have been sold since 2002.",
+            "They have been waiting for the bus for two hours.",
+            "We don't have to pay for the service."
+          ]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "tf",
+        instruction: "Read the passage carefully and indicate whether each statement is true (T) or false (F). (20 pts)",
+        passageTitle: "The Wonders of Our Universe",
+        passage: "The universe is vast, mysterious, and approximately 13.7 billion years old. Our solar system consists of the sun at the center, along with eight planets and various moons held together by gravity. The four smaller inner planets—Mercury, Venus, Earth, and Mars—are composed primarily of rock and metal. In contrast, the two largest planets, Jupiter and Saturn, are known as \"gas giants\" because they consist mainly of hydrogen and helium. The two planets furthest from the sun, Uranus and Neptune, consist mostly of ice.\n\nEarth is uniquely positioned in our solar system, serving as the only known planet to support life. It maintains a perfect distance from the sun; if it were too close, oceans would evaporate due to extreme heat, whereas if it were too far, the planet would freeze completely. Furthermore, Earth rotates on its tilted axis (23.5 degrees), which creates our changing seasons, and its protective atmosphere blocks harmful solar radiation while retaining vital warmth. As science and astronomy continue to advance, human understanding of the Milky Way galaxy and the billions of other galaxies in the observable universe continues to grow.",
+        statements: [
+          "1. The universe is estimated to be about 13.7 billion years old.",
+          "2. Our solar system features the sun at its center.",
+          "3. Earth is categorized as a gas giant alongside Jupiter and Saturn.",
+          "4. Mercury, Venus, Earth, and Mars are made mostly of rock and metal.",
+          "5. Jupiter and Saturn consist mainly of hydrogen and helium.",
+          "6. Uranus and Neptune are the two planets closest to the sun.",
+          "7. Earth is currently the only planet in the universe known to harbor life.",
+          "8. Earth's tilt on its axis at 23.5 degrees is responsible for our seasons.",
+          "9. Earth's atmosphere fails to block harmful solar radiation.",
+          "10. The Milky Way is just one of many galaxies in the observable universe."
+        ],
+        answers: ["T", "T", "F", "T", "T", "F", "T", "T", "F", "T"]
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE of these three topics to write a paragraph around 150 words. (20 pts)",
+        topics: [
+          { id: 1, title: "Topic 1: A Memorable Learning or School Experience", desc: "Write about an important educational experience or school project you have completed. Explain what you did, when it took place, how you felt, and why it mattered to you. (Use Present Perfect and Past Simple tenses)." },
+          { id: 2, title: "Topic 2: Rules and Advice for a Safe Digital Life", desc: "Write a paragraph giving rules and useful advice on how to stay safe online, avoid scams, and protect personal privacy. Use modal verbs such as should, shouldn't, must, mustn't, have to, and don't have to." },
+          { id: 3, title: "Topic 3: A Retelling of an Unexpected Event", desc: "Write a short narrative story about an unexpected event or strange coincidence that happened to you or someone you know. Use Narrative Tenses (Past Simple, Past Continuous, Past Perfect) and appropriate conjunctions." }
+        ]
+      }
+    },
+    answerKeyTitle: "ANSWER KEY (អត្រាកំណែសម្រាប់វិញ្ញាសាទី ៣)"
+  },
+  {
+    id: "set4",
+    title: "Final Examination – Set 4",
+    subtitle: "Year 1, Semester 2",
+    subject: "General English II (Units 7–12)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its corresponding definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. journalist" },
+            { id: 2, text: "2. musician" },
+            { id: 3, text: "3. cough" },
+            { id: 4, text: "4. headache" },
+            { id: 5, text: "5. influenza" },
+            { id: 6, text: "6. download" },
+            { id: 7, text: "7. phishing" },
+            { id: 8, text: "8. refugee" },
+            { id: 9, text: "9. cousin" },
+            { id: 10, text: "10. funeral" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A person who plays a musical instrument professionally or as a hobby." },
+            { id: "B", text: "B. A person who writes for newspapers, magazines, or broadcasts news." },
+            { id: "C", text: "C. To expel air from the lungs with a sudden sharp sound due to throat irritation." },
+            { id: "D", text: "D. A continuous pain felt in the head." },
+            { id: "E", text: "E. A contagious viral infection causing fever, chills, and body aches (the flu)." },
+            { id: "F", text: "F. To copy data from one computer system to another, typically over the internet." },
+            { id: "G", text: "G. Fraudulent emails attempting to acquire sensitive personal information." },
+            { id: "H", text: "H. A person forced to leave their country to escape war, persecution, or disaster." },
+            { id: "I", text: "I. A child of one's uncle or aunt." },
+            { id: "J", text: "J. A ceremony for burying or cremating a deceased person." }
+          ],
+          answers: { 1: "B", 2: "A", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G", 8: "H", 9: "I", 10: "J" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the paragraph using the words in the box. Use each word ONCE. (10 pts)",
+          box: ["A. journalist", "B. musician", "C. cough", "D. headache", "E. influenza", "F. download", "G. phishing", "H. refugee", "I. cousin", "J. funeral"],
+          passage: "Daily Life, Health, and Digital Security\nModern life requires balancing professional duties, personal well-being, and digital awareness. A professional (1) _____ investigates breaking news stories, while a talented (2) _____ entertains audiences with live concerts. Health issues frequently interrupt our daily routines; for instance, catching a seasonal (3) _____ can lead to a persistent (4) _____ and a severe (5) _____ that requires bed rest. In the digital world, users must securely (6) _____ educational files while avoiding dangerous (7) _____ scams designed to steal login passwords. Social structures also vary widely—some people live near an extended family member like a close (8) _____, whereas others are forced to live as a displaced (9) _____ due to conflicts. Finally, communities gather respectfully at a solemn (10) _____ to pay tribute to departed loved ones.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "B", 3: "E", 4: "C", 5: "D", 6: "F", 7: "G", 8: "I", 9: "H", 10: "J" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Complete each sentence with an appropriate word from Units 7–12. Use one word or phrase in each blank. (10 pts)",
+          questions: [
+            "1. A writer or reporter who gathers and publishes news stories is a ________________.",
+            "2. An artist who plays music or sings professionally is a ________________.",
+            "3. Expelling air noisily from the throat due to a cold or irritation is a ________________.",
+            "4. A painful sensation or ache in the head is known as a ________________.",
+            "5. A highly contagious viral respiratory illness commonly known as the flu is ________________.",
+            "6. Copying files or applications from a web server to your local computer is to ________________.",
+            "7. Deceptive online scams attempting to steal user credentials are called ________________.",
+            "8. A person who flees across national borders to escape war or famine is a ________________.",
+            "9. The son or daughter of your aunt and uncle is your ________________.",
+            "10. The formal religious or cultural ceremony held for someone who has died is a ________________."
+          ],
+          answers: ["journalist", "musician", "cough", "headache", "influenza", "download", "phishing", "refugee", "cousin", "funeral"]
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Complete the sentences using the correct form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. I ________________ (live) in this city since I was a child. (Present Perfect)",
+            "2. The first email message ________________ (send) in the early 1970s. (Past Passive)",
+            "3. If I ________________ (have) a fast car, I would drive to the beach today. (Second Conditional)",
+            "4. She ________________ (work) on her computer for four hours straight. (Present Perfect Continuous)",
+            "5. When the police arrived at the bank, the thieves ________________ (escape). (Past Perfect)",
+            "6. Mobile phones ________________ (use) by billions of people worldwide. (Present Simple Passive)",
+            "7. You ________________ (must / mustn't) forget to submit your report tomorrow morning.",
+            "8. If the weather is warm this weekend, we ________________ (go) swimming. (First Conditional)",
+            "9. They ________________ (not finish) reading the novel yet. (Present Perfect with 'yet')",
+            "10. While we were having dinner, the power ________________ (fail). (Past Simple)"
+          ],
+          answers: ["have lived", "was sent", "had", "has been working", "had escaped", "are used", "mustn't", "will go", "haven't finished", "failed"]
+        },
+        mcq: {
+          pts: 10,
+          instruction: "B. Choose the correct answer. (10 pts)",
+          questions: [
+            { id: 1, text: "1. She has studied English ______ three years.", options: ["A. since", "B. for", "C. during", "D. from"] },
+            { id: 2, text: "2. The world's first website ______ created by Tim Berners-Lee in 1991.", options: ["A. is", "B. was", "C. has been", "D. were"] },
+            { id: 3, text: "3. You ______ wear a helmet when cycling on busy roads for your own safety.", options: ["A. don't have to", "B. have to", "C. mustn't", "D. shouldn't"] },
+            { id: 4, text: "4. If they had more money, they ______ buy a new house.", options: ["A. will", "B. would", "C. can", "D. must"] },
+            { id: 5, text: "5. He was very tired because he ______ studying all night long.", options: ["A. has been", "B. had been", "C. were", "D. are"] },
+            { id: 6, text: "6. Students ______ bring dangerous objects to school under any circumstances.", options: ["A. don't have to", "B. mustn't", "C. should", "D. needn't"] },
+            { id: 7, text: "7. You look exhausted. You ______ take a few days off work.", options: ["A. shouldn't", "B. should", "C. mustn't", "D. has to"] },
+            { id: 8, text: "8. Many useful features ______ added to digital cameras over the last decade.", options: ["A. are", "B. were", "C. have been", "D. will be"] },
+            { id: 9, text: "9. You ______ pay for admission because today is a free public holiday.", options: ["A. mustn't", "B. don't have to", "C. should", "D. had to"] },
+            { id: 10, text: "10. If you practice speaking every day, your English ______ improve quickly.", options: ["A. will", "B. would", "C. did", "D. have"] }
+          ],
+          answers: { 1: "B", 2: "B", 3: "B", 4: "B", 5: "B", 6: "B", 7: "B", 8: "C", 9: "B", 10: "A" }
+        },
+        rearrange: {
+          pts: 10,
+          instruction: "C. Rearrange the words to make correct grammatical sentences. Write the complete sentence on the line. (10 pts)",
+          questions: [
+            "1. lived / has / she / in this village / ten years / for .",
+            "2. invented / phone / the / mobile / was / in 1973.",
+            "3. rich / were / if / I / a hospital / build / I / would .",
+            "4. use / phones / students / mustn't / exams / during .",
+            "5. left / train / the / had / station / before / reached / we / the.",
+            "6. do / have / to / finish / you / project / the / today / ?",
+            "7. apologize / you / should / made / a mistake / you / if .",
+            "8. sold / been / have / computers / years / for / many .",
+            "9. practicing / piano / has / she / been / hours / two / for .",
+            "10. have / wait / don't / we / to / long / very ."
+          ],
+          answers: [
+            "She has lived in this village for ten years.",
+            "The mobile phone was invented in 1973.",
+            "If I were rich, I would build a hospital.",
+            "Students mustn't use phones during exams.",
+            "The train had left before we reached the station.",
+            "Do you have to finish the project today?",
+            "You should apologize if you made a mistake.",
+            "Computers have been sold for many years.",
+            "She has been practicing piano for two hours.",
+            "We don't have to wait very long."
+          ]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "tf",
+        instruction: "Read the passage carefully and indicate whether each statement is true (T) or false (F). (20 pts)",
+        passageTitle: "The History of the Internet and Digital Milestones",
+        passage: "The internet has fundamentally reshaped global communication, education, and commerce since its inception. Its roots trace back to ARPANET, a network funded by the United States Department of Defense in the late 1960s. In the early 1970s, researchers detected the very first experimental computer virus, known as \"Creeper,\" which flashed the message: \"I'm a creeper, catch me if you can!\"\n\nAs networking technology evolved, communication milestones followed rapidly. The first digital text message was transmitted in December 1992, paving the way for instant messaging culture. In 1989, computer scientist Alan Emtage created \"Archie,\" which is widely regarded as the world's earliest search engine designed to index FTP archives. By 1991, Tim Berners-Lee introduced the World Wide Web to the public, making online content accessible through user-friendly browsers.\n\nSocial connectivity grew exponentially in the decades that followed. In 1995, Classmates.com launched to help alumni reconnect, and by 2004, Facebook was founded by university students, transforming into a massive worldwide social platform. While digital innovations offer incredible benefits, cybersecurity experts emphasize the importance of data protection against phishing scams and malware threats.",
+        statements: [
+          "1. The internet's origins trace back to ARPANET in the late 1960s.",
+          "2. The first computer virus was named \"Creeper\".",
+          "3. \"Creeper\" displayed the text message: \"Catch me if you can!\"",
+          "4. The first text message was sent in December 1992.",
+          "5. Alan Emtage created \"Archie\" in 1989 as an early search tool.",
+          "6. Tim Berners-Lee introduced the World Wide Web in 1991.",
+          "7. Classmates.com was launched in 2004 to connect old schoolmates.",
+          "8. Facebook was founded by university students in 2004.",
+          "9. Cybersecurity experts advise users to ignore online security threats completely.",
+          "10. Digital innovations have significantly transformed global communication and commerce."
+        ],
+        answers: ["T", "T", "T", "T", "T", "T", "F", "T", "F", "T"]
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE of these three topics to write a paragraph around 150 words. (20 pts)",
+        topics: [
+          { id: 1, title: "Topic 1: A Memorable Experience or Journey", desc: "Write a paragraph about an unforgettable trip or project you completed in the past. Describe where you went or what you did, what challenges you faced, and how it changed your perspective. (Use Present Perfect and Past Simple tenses)." },
+          { id: 2, title: "Topic 2: Rules and Advice for Maintaining Good Health", desc: "Write a paragraph offering practical advice on how to stay healthy, avoid illnesses like the flu, and maintain physical fitness. Use modal verbs such as should, shouldn't, must, mustn't, have to, and don't have to." },
+          { id: 3, title: "Topic 3: A Retelling of a Surprising Encounter", desc: "Write a short narrative story about an unexpected meeting with an old friend or a strange coincidence that happened to you. Use Narrative Tenses (Past Simple, Past Continuous, Past Perfect) and appropriate conjunctions." }
+        ]
+      }
+    },
+    answerKeyTitle: "ANSWER KEY (អត្រាកំណែសម្រាប់វិញ្ញាសាទី ៤)"
+  },
+  {
+    id: "set5",
+    title: "Unit 9 (Time for Stories) – Set 5",
+    subtitle: "General English II (Unit 9)",
+    subject: "General English II (Unit 9)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its correct definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. delighted" },
+            { id: 2, text: "2. upset" },
+            { id: 3, text: "3. jealous" },
+            { id: 4, text: "4. shepherd" },
+            { id: 5, text: "5. fable" },
+            { id: 6, text: "6. moral" },
+            { id: 7, text: "7. villain" },
+            { id: 8, text: "8. potion" },
+            { id: 9, text: "9. cheque" },
+            { id: 10, text: "10. lawyer" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A person who looks after sheep in the hills or countryside" },
+            { id: "B", text: "B. A traditional short story that teaches a moral lesson" },
+            { id: "C", text: "C. Extremely happy, pleased, or glad" },
+            { id: "D", text: "D. Unhappy, disappointed, or worried about something bad" },
+            { id: "E", text: "E. A legal professional who represents or advises clients" },
+            { id: "F", text: "F. A liquid mixture or drink used as medicine, magic, or poison" },
+            { id: "G", text: "G. An evil or wicked character in a story, novel, or play" },
+            { id: "H", text: "H. A bank document used to pay a specific sum of money" },
+            { id: "I", text: "I. Feeling angry or unhappy because you want what someone else has" },
+            { id: "J", text: "J. The practical rule or lesson taught by a story" }
+          ],
+          answers: { 1: "C", 2: "D", 3: "I", 4: "A", 5: "B", 6: "J", 7: "G", 8: "F", 9: "H", 10: "E" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the story using the correct word from the box. Use each word ONCE. (10 pts)",
+          box: ["A. delighted", "B. disappeared", "C. drowned", "D. furious", "E. plague", "F. promised", "G. refused", "H. secret", "I. stranger", "J. villagers"],
+          passage: "A long time ago, the town of Hamelin suffered from a terrible (1) _____ of rats that ate all the food. One day, a mysterious (2) _____ arrived with a pipe and (3) _____ to get rid of every rat for a sum of gold. The (4) _____ were (5) _____ and agreed to pay him. The man played his pipe, leading all the rats to the river, where they all (6) _____. However, once the rats were gone, the townsfolk (7) _____ to give him his money. In a (8) _____ rage, the piper left, but he returned when everyone was in church. He played a (9) _____ tune, and all the children followed him into the mountains. The children (10) _____ and were never seen again.",
+          blanksCount: 10,
+          answers: { 1: "E", 2: "I", 3: "F", 4: "J", 5: "A", 6: "C", 7: "G", 8: "D", 9: "H", 10: "B" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Circle the letter of the ONE correct choice in each sentence. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. The shepherd boy was so ________ that he decided to shout \"Wolf!\" for fun.", options: ["A. bored", "B. boring", "C. bores", "D. bore"] },
+            { id: 2, text: "2. After walking twenty miles, the two travellers were ________ and needed rest.", options: ["A. delight", "B. exhausted", "C. exhausting", "D. exhaustion"] },
+            { id: 3, text: "3. Robert Louis Stevenson wrote famous stories about adventure, danger, and ________.", options: ["A. horrible", "B. horrify", "C. horror", "D. horrified"] },
+            { id: 4, text: "4. Dr. Jekyll drank the magic potion because he wanted to ________ his good side from his evil side.", options: ["A. separated", "B. separate", "C. separating", "D. separation"] },
+            { id: 5, text: "5. The villagers were very ________ when they realized the boy had lied again.", options: ["A. anger", "B. angrily", "C. angry", "D. angrier"] },
+            { id: 6, text: "6. Mr. Utterson was a well-known ________ who investigated the mystery.", options: ["A. lawyer", "B. law", "C. lawful", "D. lawfully"] },
+            { id: 7, text: "7. When Peter saw Amanda after fifteen years, all his old memories came ________ back to him.", options: ["A. flown", "B. flooding", "C. flooded", "D. fly"] },
+            { id: 8, text: "8. Charles Dickens wrote novels to draw attention to social problems and help ________ people.", options: ["A. poverty", "B. poorly", "C. poor", "D. poorer"] },
+            { id: 9, text: "9. The bear bent down, ________ the man's ear, and walked away.", options: ["A. sniffed", "B. sniffing", "C. sniff", "D. sniffs"] },
+            { id: 10, text: "10. I was ________ surprised when I heard the sudden noise in the dark room.", options: ["A. such", "B. so", "C. such a", "D. much"] }
+          ],
+          answers: { 1: "A", 2: "B", 3: "C", 4: "B", 5: "C", 6: "A", 7: "B", 8: "C", 9: "A", 10: "B" }
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Choose the best option (A, B, C, or D) to complete each sentence. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. The two travellers were hungry because they ________ anything all day.", options: ["A. haven't eaten", "B. hadn't eaten", "C. didn't eat", "D. don't eat"] },
+            { id: 2, text: "2. By the time the villagers reached the top of the hill, the wolf ________.", options: ["A. disappeared", "B. has disappeared", "C. had disappeared", "D. was disappearing"] },
+            { id: 3, text: "3. I fell asleep last night while I ________ a book.", options: ["A. read", "B. was reading", "C. had read", "D. have read"] },
+            { id: 4, text: "4. She didn't enjoy the party ________ she didn't know anyone there.", options: ["A. so", "B. although", "C. because", "D. until"] },
+            { id: 5, text: "5. The boy shouted for help, ________ the villagers didn't believe him this time.", options: ["A. because", "B. so", "C. but", "D. as"] },
+            { id: 6, text: "6. ________ the villagers heard his cry, they raced to help him.", options: ["A. As soon as", "B. While", "C. Although", "D. Until"] },
+            { id: 7, text: "7. Mr. Utterson went to bed after he ________ the letter from Dr. Jekyll.", options: ["A. reads", "B. had read", "C. has read", "D. was reading"] },
+            { id: 8, text: "8. While the shepherd boy ________ under a tree, he had an idea.", options: ["A. sat", "B. sits", "C. was sitting", "D. had sat"] },
+            { id: 9, text: "9. It was ________ an awful day that nobody wanted to go out.", options: ["A. so", "B. such", "C. such an", "D. so much"] },
+            { id: 10, text: "10. Charles Dickens had written several books before he ________ in 1870.", options: ["A. died", "B. had died", "C. dies", "D. was dying"] }
+          ],
+          answers: { 1: "B", 2: "C", 3: "B", 4: "C", 5: "C", 6: "A", 7: "B", 8: "C", 9: "C", 10: "A" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "B. Complete each sentence with the correct form of the verb in brackets using Past Simple, Past Continuous, or Past Perfect. (10 pts)",
+          questions: [
+            "1. When Gabriel Utterson arrived at the house, Mr. Hyde ________________ (already / leave).",
+            "2. The travellers ________________ (walk) along the road when suddenly a bear appeared.",
+            "3. The shepherd boy smiled after the villagers ________________ (go) back to work.",
+            "4. She didn't read the novel because she ________________ (read) it a year before.",
+            "5. While I ________________ (do) my homework, my friend called me.",
+            "6. The little girl cried because she ________________ (fall) down and hurt herself.",
+            "7. As soon as Amanda ________________ (pass) her driving test, she bought a car.",
+            "8. Dr. Jekyll ________________ (create) a special potion before he turned into Mr. Hyde.",
+            "9. They couldn't enter the house because he ________________ (forget) his key.",
+            "10. The villagers ________________ (not / believe) the shepherd boy when he shouted \"Wolf!\" the third time."
+          ],
+          answers: ["had already left", "were walking", "had gone", "had read", "was doing", "had fallen", "passed", "had created", "had forgotten", "didn't believe"]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "ordering_and_tf",
+        instruction: "Read the story and complete the ordering (6 pts) and True/False statements (14 pts).",
+        orderingPart: {
+          pts: 6,
+          instruction: "A. Put the events in the correct chronological order by numbering them from 1 to 6 in the blanks provided. (6 pts)",
+          items: [
+            "A. Mr. Utterson noticed that Mr. Hyde's cheque was signed with the name of Dr. Jekyll.",
+            "B. Dr. Jekyll drank a potion he had created to separate his good and evil sides.",
+            "C. Utterson and the servants broke down the door and found Mr. Hyde dead on the floor.",
+            "D. Mr. Utterson saw a strange, evil-looking man named Mr. Hyde attack a woman in the street.",
+            "E. Dr. Jekyll realized he was losing control over Mr. Hyde and could no longer transform back.",
+            "F. Mr. Hyde committed the violent murder of an old man walking home at night."
+          ],
+          answers: { A: "3", B: "1", C: "6", D: "2", E: "5", F: "4" }
+        },
+        tfPart: {
+          pts: 14,
+          instruction: "B. Read the story and decide whether each statement is True (T) or False (F). (14 pts)",
+          passageTitle: "Things We Never Said",
+          passage: "Peter recognized her immediately as she stood looking into a shop window on High Street. It had been fifteen long years since they had been together, but he had never stopped thinking about her. When he walked up and spoke her name softly, Amanda turned in surprise. Memories of their youth suddenly came flooding back to both of them.\n\nDuring the summer when they were both eighteen years old, they used to sit together by the river on warm, sunny afternoons. Back then, Peter had told Amanda that he could not imagine living his life without her. But after that summer, their lives moved in completely different directions.\n\n\"I'm surprised you recognized me,\" Amanda said, smiling gently. \"Have you moved back here permanently?\"\n\n\"Good heavens, no,\" Peter replied. \"I work in London as a lawyer now. I've only come back to town for my father's 70th birthday party.\" He paused before adding, \"I always thought I would travel the world after university, but I ended up studying law instead.\"\n\nAmanda explained that she had also returned home to help her mother organize the flowers for her sister's upcoming wedding. Over the past few years, she had worked in several temporary office jobs and had given up painting, even though Peter remembered how much he had loved her artwork.\n\nAs they stood talking on the street, Amanda asked softly why their relationship had ended so abruptly back then. Peter looked at her thoughtfully and said, \"We were very young—probably too young to handle a serious relationship. Sometimes people just grow apart.\"\n\nAlthough Amanda agreed with his words, she felt a slight sting of hurt because Peter seemed to speak with so little regret about their past. After a short conversation, Amanda glanced at her watch and excused herself. They said a polite goodbye, promising to stay in touch, before walking away in opposite directions down the street where they had first fallen in love years ago.",
+          statements: [
+            "1. Peter and Amanda had not seen each other for fifteen years before meeting on High Street.",
+            "2. Amanda recognized Peter immediately before he spoke her name.",
+            "3. When they were eighteen, Peter and Amanda spent summer afternoons sitting by the river.",
+            "4. Peter currently lives and works in his hometown.",
+            "5. Peter works as a lawyer in London.",
+            "6. Peter travelled all over the world after finishing university.",
+            "7. Amanda returned to town to help prepare flowers for her sister's wedding."
+          ],
+          answers: ["T", "F", "T", "F", "T", "F", "T"]
+        }
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE topic to write a paragraph around 150 words using Narrative Tenses (Past Simple, Past Continuous, Past Perfect) and conjunctions.",
+        topics: [
+          { id: 1, title: "Topic 1: Surprising Meeting", desc: "Write a short story or narrative account about a surprising meeting with an old friend you hadn't seen for a long time." },
+          { id: 2, title: "Topic 2: Retelling a Fable", desc: "Retell a famous story or fable (e.g., The Shepherd Boy and the Wolf or The Pied Piper of Hamelin) in your own words." }
+        ]
+      }
+    },
+    answerKeyTitle: "🔑 ANSWER KEY (UNIT 9)"
+  },
+  {
+    id: "set6",
+    title: "Unit 10 (Our Interactive World) – Set 6",
+    subtitle: "General English II (Unit 10)",
+    subject: "General English II (Unit 10)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION I: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match each word in Column A with its correct definition in Column B. (10 pts)",
+          columnA: [
+            { id: 1, text: "1. Search engine" },
+            { id: 2, text: "2. Database" },
+            { id: 3, text: "3. Cybercafé" },
+            { id: 4, text: "4. Blogger" },
+            { id: 5, text: "5. Computer virus" },
+            { id: 6, text: "6. Smartphone" },
+            { id: 7, text: "7. Newsagent" },
+            { id: 8, text: "8. Spam" },
+            { id: 9, text: "9. Well-known" },
+            { id: 10, text: "10. Badly-behaved" }
+          ],
+          columnB: [
+            { id: "A", text: "A. A shopkeeper who sells newspapers, magazines, and sweets." },
+            { id: "B", text: "B. Unwanted or irrelevant electronic messages sent in bulk over the Internet." },
+            { id: "C", text: "C. Acting in an improper, disobedient, or rude manner." },
+            { id: "D", text: "D. A computer program that searches the Web for specific information." },
+            { id: "E", text: "E. A place providing public computer terminals with Internet access." },
+            { id: "F", text: "F. Famous, prominent, or recognized by many people." },
+            { id: "G", text: "G. A person who regularly writes online personal journal entries." },
+            { id: "H", text: "H. An organized collection of electronic data stored on a computer system." },
+            { id: "I", text: "I. A pocket-sized mobile phone with advanced multimedia features." },
+            { id: "J", text: "J. A program designed to replicate itself and spread across computers." }
+          ],
+          answers: { 1: "D", 2: "H", 3: "E", 4: "G", 5: "J", 6: "I", 7: "A", 8: "B", 9: "F", 10: "C" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the story below using the words in the box. Use each word ONCE. (10 pts)",
+          box: ["A. businessman", "B. laptop", "C. website", "D. log in", "E. inbox", "F. text message", "G. download", "H. well-equipped", "I. complaint", "J. features"],
+          passage: "Last week, a busy (1) _____ sat down in a modern, (2) _____ coffee shop to do some work. He opened his (3) _____ and connected to the Internet. First, he opened his web browser to visit his company's official (4) _____. Before accessing confidential files, he had to (5) _____ using his secure password. When he opened his email (6) _____, he noticed an urgent message from a client making a (7) _____ about a delayed order. Immediately, he used his mobile phone to send a quick (8) _____ to his manager. While waiting for a reply, he decided to (9) _____ a video presentation. Modern technology has introduced many amazing (10) _____ that make working on the go simple and fast.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "H", 3: "B", 4: "C", 5: "D", 6: "E", 7: "I", 8: "F", 9: "G", 10: "J" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Circle the ONE correct choice in each sentence below. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. To confirm the meeting, he sent a quick ________ to my phone.", options: ["A. present", "B. postcard", "C. text message", "D. discovery"] },
+            { id: 2, text: "2. Before reading your personal messages, you must ________ to your account.", options: ["A. log off", "B. log in", "C. bookmark", "D. download"] },
+            { id: 3, text: "3. Google is the world's most widely used ________.", options: ["A. search engine", "B. cellphone", "C. cybercafé", "D. newsagent"] },
+            { id: 4, text: "4. Our new office has all the latest machines, so it is ________.", options: ["A. well-equipped", "B. badly-equipped", "C. well-written", "D. badly-behaved"] },
+            { id: 5, text: "5. The university student had to ________ research for her term paper.", options: ["A. make", "B. do", "C. take", "D. play"] },
+            { id: 6, text: "6. You can ________ music and video files directly from the Web.", options: ["A. download", "B. send", "C. make", "D. take"] },
+            { id: 7, text: "7. To communicate with former classmates, millions use a ________.", options: ["A. social networking site", "B. search engine", "C. newsagent", "D. database"] },
+            { id: 8, text: "8. The young entrepreneur plans to ________ a business next month.", options: ["A. play", "B. start", "C. do", "D. take"] },
+            { id: 9, text: "9. The rude children in the classroom were ________ when they shouted.", options: ["A. badly-behaved", "B. well-behaved", "C. well-known", "D. badly-dressed"] },
+            { id: 10, text: "10. Yesterday, she decided to ________ a complaint about the poor service.", options: ["A. make", "B. do", "C. take", "D. play"] }
+          ],
+          answers: { 1: "C", 2: "B", 3: "A", 4: "A", 5: "B", 6: "A", 7: "A", 8: "B", 9: "A", 10: "A" }
+        }
+      },
+      grammar: {
+        title: "SECTION II: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Choose the correct passive verb form (A, B, C, or D) to complete each sentence. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. Today, mobile phones ________ by almost six billion people worldwide.", options: ["A. own", "B. are owned", "C. were owned", "D. have owned"] },
+            { id: 2, text: "2. The very first mobile phone call ________ in 1973 by Martin Cooper.", options: ["A. was made", "B. is made", "C. has been made", "D. will be made"] },
+            { id: 3, text: "3. In the UK, around 30 million mobile phones ________ every year.", options: ["A. sold", "B. are sold", "C. were sold", "D. have sold"] },
+            { id: 4, text: "4. The first text message ________ in 1992.", options: ["A. was sent", "B. is sent", "C. has sent", "D. sends"] },
+            { id: 5, text: "5. Camera phones ________ continuously since 2002.", options: ["A. are sold", "B. were sold", "C. have been sold", "D. will be sold"] },
+            { id: 6, text: "6. Over 100 million mobile phones ________ away each year.", options: ["A. throw", "B. are thrown", "C. were thrown", "D. have thrown"] },
+            { id: 7, text: "7. Experts predict that landline phones ________ by mobiles before long.", options: ["A. are replaced", "B. were replaced", "C. will be replaced", "D. have replaced"] },
+            { id: 8, text: "8. The telephone ________ by Alexander Graham Bell in 1876.", options: ["A. was invented", "B. is invented", "C. has been invented", "D. invented"] },
+            { id: 9, text: "9. Every day, nearly 5.5 billion questions ________ by Google.", options: ["A. answer", "B. are answered", "C. were answered", "D. have answered"] },
+            { id: 10, text: "10. Public smoking should ________ in city centers.", options: ["A. ban", "B. be banned", "C. being banned", "D. banned"] }
+          ],
+          answers: { 1: "B", 2: "A", 3: "B", 4: "A", 5: "C", 6: "B", 7: "C", 8: "A", 9: "B", 10: "B" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "B. Complete each sentence with the correct passive form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. Seventy percent of the Earth's surface ________________ (cover) by water.",
+            "2. The world's first clockwork radio ________________ (invent) by Trevor Baylis in 1991.",
+            "3. Amazon.com ________________ (found) by Jeff Bezos in his garage in 1994.",
+            "4. The Mona Lisa ________________ (paint) by Leonardo da Vinci.",
+            "5. Many amazing features ________________ (add) to smartphones recently.",
+            "6. In my opinion, landline phones ________________ (replace) by mobiles in the future.",
+            "7. The Creeper virus ________________ (detect) on ARPANET in the early 1970s.",
+            "8. Millions of online searches ________________ (conduct) by Google every minute.",
+            "9. Paper ________________ (not / make) from plastic.",
+            "10. Your final exam results ________________ (send) in the post next week."
+          ],
+          answers: ["is covered", "was invented", "was founded", "was painted", "have been added", "will be replaced", "was detected", "are conducted", "is not made", "will be sent"]
+        }
+      },
+      reading: {
+        title: "SECTION III: READING (20 pts)",
+        type: "ordering_and_tf",
+        instruction: "Read the stories below for Ordering (6 pts) and True/False (14 pts).",
+        orderingPart: {
+          pts: 6,
+          instruction: "A. Read the story and put the events (A-F) in the correct chronological order (1 to 6). (6 pts)",
+          passageTitle: "The Mobile Phone and the Fish",
+          passage: "Ten days ago, Andrew Cheatle, a businessman from Sussex, was walking on the beach near his home when he accidentally lost his mobile phone. It slipped into the water, and a large wave quickly carried it out to sea. Andrew thought it was gone forever. One week later, a fisherman named Glen Kerley was on his boat catching fish. Back on land, while Glen was preparing a cod fish for market, he noticed a hard, metal object inside the fish. Surprisingly, it was a mobile phone. Although smelly and dirty, the phone still worked. Glen checked the contact list and dialed a number. At that moment, Andrew was out shopping for a new phone with his girlfriend when her phone rang. She answered and said, \"It's a call from your lost phone!\" Glen explained how he found it, and the next day they met so Glen could return the phone to Andrew.",
+          items: [
+            "A. Glen Kerley found a metal object inside a cod fish while preparing it for sale.",
+            "B. Andrew Cheatle accidentally dropped his mobile phone into the ocean water.",
+            "C. Glen called a contact number from the retrieved phone's contact list.",
+            "D. Glen met Andrew in person and handed back his working mobile phone.",
+            "E. Andrew's girlfriend received a surprising phone call while shopping for a new phone.",
+            "F. A large ocean wave carried the mobile phone out to sea."
+          ],
+          answers: { A: "3", B: "1", C: "4", D: "6", E: "5", F: "2" }
+        },
+        tfPart: {
+          pts: 14,
+          instruction: "B. Read the passage below and decide whether each statement is True (T) or False (F). (14 pts)",
+          passageTitle: "Communication and the Digital Revolution",
+          passage: "In the 21st century, interactive technology has transformed how human beings live, work, and connect. Today, mobile phones are owned by nearly six billion people worldwide. The first mobile phone call was made in New York City in 1973 by an American engineer named Martin Cooper. His original phone weighed over one kilogram and had a battery life of thirty-six minutes.\n\nIn 1989, Alan Emtage, a student studying in Canada, created \"Archie,\" the world's first search engine. Personal blogging also emerged in the 1990s when American journalist Justin Hall began sharing personal details on his website. Another major development was Classmates.com in 1995, which allowed users to reconnect with old school friends. Later, in 2004, Facebook was created by Mark Zuckerberg at Harvard University. Today, Facebook has hundreds of millions of active users and has been translated into dozens of languages.\n\nHowever, over 100 million mobile phones are thrown away every year, creating environmental waste. Despite these drawbacks, digital technology remains an indispensable part of modern life.",
+          statements: [
+            "1. The first mobile phone call was made in New York City in 1973.",
+            "2. Martin Cooper's original mobile phone weighed less than 500 grams.",
+            "3. Today, mobile phones are owned by nearly six billion people across the globe.",
+            "4. \"Archie,\" the first search engine, was created by a student in Canada in 1989.",
+            "5. Justin Hall used his website only to publish technical information about computers.",
+            "6. Classmates.com was created at Harvard University in 2004.",
+            "7. Facebook has been translated into dozens of different languages."
+          ],
+          answers: ["T", "F", "T", "T", "F", "F", "T"]
+        }
+      },
+      writing: {
+        title: "SECTION IV: WRITING (20 pts)",
+        instruction: "Choose ONE topic to write a paragraph around 150 words using Passive Voice structures.",
+        topics: [
+          { id: 1, title: "Topic 1: Pros & Cons of Tech", desc: "Write a discussion paragraph on the pros and cons of modern interactive technology and smartphones." },
+          { id: 2, title: "Topic 2: Technology in Education", desc: "Describe how technology or internet communication has changed the way people study and do research today." }
+        ]
+      }
+    },
+    answerKeyTitle: "🔑 ANSWER KEY (UNIT 10)"
+  },
+  {
+    id: "set7",
+    title: "Final Examination (Units 11–12) – Set 7",
+    subtitle: "General English II (Units 11–12)",
+    subject: "General English II (Units 11–12)",
+    duration: 80,
+    totalScore: 100,
+    sections: {
+      vocab: {
+        title: "SECTION 1: VOCABULARY (30 pts)",
+        matching: {
+          pts: 10,
+          instruction: "A. Match the words (1-10) with their correct definitions (A-J). (10 pts)",
+          columnA: [
+            { id: 1, text: "1. Engaged" },
+            { id: 2, text: "2. Funeral" },
+            { id: 3, text: "3. Pregnant" },
+            { id: 4, text: "4. Honeymoon" },
+            { id: 5, text: "5. Split up" },
+            { id: 6, text: "6. Widowed" },
+            { id: 7, text: "7. Crossroads" },
+            { id: 8, text: "8. Dilemma" },
+            { id: 9, text: "9. Cure" },
+            { id: 10, text: "10. Grateful" }
+          ],
+          columnB: [
+            { id: "A", text: "A. Feeling or showing thanks for a favour or help." },
+            { id: "B", text: "B. Having formally agreed to marry someone." },
+            { id: "C", text: "C. A situation in which a difficult choice has to be made." },
+            { id: "D", text: "D. Expecting a baby." },
+            { id: "E", text: "E. Something that cures an illness or restores health." },
+            { id: "F", text: "F. To end a romantic relationship or marriage." },
+            { id: "G", text: "G. A ceremony held for a person who has died." },
+            { id: "H", text: "H. A holiday taken by a newly married couple." },
+            { id: "I", text: "I. Having lost a husband or wife by death and not remarried." },
+            { id: "J", text: "J. A point in life when an important decision must be made." }
+          ],
+          answers: { 1: "B", 2: "G", 3: "D", 4: "H", 5: "F", 6: "I", 7: "J", 8: "C", 9: "E", 10: "A" }
+        },
+        fillParagraph: {
+          pts: 10,
+          instruction: "B. Complete the story by filling in each gap (1-10) with the most appropriate word from the box. Use each word ONLY ONCE. (10 pts)",
+          box: ["A. dilemma", "B. crossroads", "C. engaged", "D. funeral", "E. widowed", "F. honeymoon", "G. pregnant", "H. weighed", "I. grateful", "J. belong"],
+          passage: "Last year, my older sister Sarah faced a major (1) _____ when deciding whether to accept a job abroad or stay near our family. She felt she was at a critical (2) _____ in her life. However, everything became clearer when she and her boyfriend got (3) _____ after dating for two years. They held a small wedding because Sarah's grandmother had recently passed away, and the family had attended her (4) _____ just two months earlier. Sarah's grandfather, who was now (5) _____, felt comforted seeing the family together. A few months after returning from their lovely (6) _____ in Italy, Sarah announced that she was (7) _____ with her first child. When her baby boy was born, he (8) _____ 3.5 kilograms and was very healthy. Sarah felt deeply (9) _____ for all the love and support around her, realizing that true happiness and support (10) _____ to a strong family.",
+          blanksCount: 10,
+          answers: { 1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G", 8: "H", 9: "I", 10: "J" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "C. Circle the ONE correct choice in each sentence below. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. She is very ________ spiders in her room.", options: ["A. afraid with", "B. afraid on", "C. afraid of", "D. afraid to"] },
+            { id: 2, text: "2. The young couple decided to ________ after years of arguing.", options: ["A. split out", "B. split up", "C. split off", "D. split away"] },
+            { id: 3, text: "3. My younger brother is extremely ________ playing chess.", options: ["A. good in", "B. good at", "C. good on", "D. good for"] },
+            { id: 4, text: "4. I am really looking forward to ________ you soon.", options: ["A. hear from", "B. hearing of", "C. hearing from", "D. heard from"] },
+            { id: 5, text: "5. He was very ________ his sister for dropping his laptop.", options: ["A. angry about", "B. angry to", "C. angry with", "D. angry for"] },
+            { id: 6, text: "6. Medical researchers hope to find a ________ cancer in the future.", options: ["A. cure of", "B. cure for", "C. cure to", "D. cure on"] },
+            { id: 7, text: "7. She was deeply ________ her final exam results.", options: ["A. worried with", "B. worried about", "C. worried on", "D. worried to"] },
+            { id: 8, text: "8. That classic acoustic guitar ________ my grandfather.", options: ["A. belongs with", "B. belongs to", "C. belongs at", "D. belongs on"] },
+            { id: 9, text: "9. There is a huge ________ the two cultures.", options: ["A. difference of", "B. difference on", "C. difference between", "D. difference with"] },
+            { id: 10, text: "10. The doctor confirmed that her baby is ________.", options: ["A. due at", "B. due into", "C. due next month", "D. due by"] }
+          ],
+          answers: { 1: "C", 2: "B", 3: "B", 4: "C", 5: "C", 6: "B", 7: "B", 8: "B", 9: "C", 10: "C" }
+        }
+      },
+      grammar: {
+        title: "SECTION 2: GRAMMAR (30 pts)",
+        verbForms: {
+          pts: 10,
+          instruction: "A. Choose the correct verb form or modal (A, B, C, or D) to complete each sentence. (10 pts)",
+          mcqFormat: true,
+          questions: [
+            { id: 1, text: "1. How long ________ English at this language institute?", options: ["A. do you learn", "B. have you been learning", "C. are you learning", "D. were you learning"] },
+            { id: 2, text: "2. She ________ tennis since she was eight years old.", options: ["A. plays", "B. played", "C. has been playing", "D. is playing"] },
+            { id: 3, text: "3. If the weather ________ nice tomorrow, we'll go for a picnic in the park.", options: ["A. is", "B. will be", "C. was", "D. would be"] },
+            { id: 4, text: "4. If I ________ a million dollars, I would buy a large house near the beach.", options: ["A. have", "B. had", "C. will have", "D. would have"] },
+            { id: 5, text: "5. I'm not sure what I'm doing tonight; I ________ go to the cinema or stay home.", options: ["A. will", "B. might", "C. would", "D. must"] },
+            { id: 6, text: "6. He is completely exhausted because he ________ in the garden all afternoon.", options: ["A. worked", "B. has been working", "C. works", "D. is working"] },
+            { id: 7, text: "7. If you ________ junk food every day, you will gain weight.", options: ["A. eat", "B. ate", "C. will eat", "D. would eat"] },
+            { id: 8, text: "8. What ________ if you found a wallet full of money in the street?", options: ["A. do you do", "B. will you do", "C. would you do", "D. have you done"] },
+            { id: 9, text: "9. If I ________ you, I would consult a doctor immediately.", options: ["A. am", "B. were", "C. will be", "D. have been"] },
+            { id: 10, text: "10. If it ________ tomorrow, we won't go swimming in the outdoor pool.", options: ["A. rains", "B. rained", "C. will rain", "D. would rain"] }
+          ],
+          answers: { 1: "B", 2: "C", 3: "A", 4: "B", 5: "B", 6: "B", 7: "A", 8: "C", 9: "B", 10: "A" }
+        },
+        shortAnswer: {
+          pts: 10,
+          instruction: "B. Complete each sentence with the correct form of the verb in brackets. (10 pts)",
+          questions: [
+            "1. How long ________________ (you / learn) how to drive?",
+            "2. She is exhausted because she ________________ (study) for her exams all day.",
+            "3. If it ________________ (rain) this weekend, we will stay at home.",
+            "4. If I ________________ (win) the lottery, I would give half of the money to charity.",
+            "5. They ________________ (look for) a house for months, but they still haven't found one.",
+            "6. If you ________________ (not / hurry) up, you will miss the morning train.",
+            "7. What ________________ (you / do) if you saw a famous movie star in a shop?",
+            "8. If I ________________ (be) you, I would apply for that job right away.",
+            "9. He ________________ (play) computer games since 9 o'clock this morning.",
+            "10. If she ________________ (have) a free weekend, she would stay in bed all day."
+          ],
+          answers: [
+            "have you been learning", "has been studying", "rains", "won",
+            "have been looking for", "don't hurry", "would you do", "were",
+            "has been playing", "had"
+          ]
+        }
+      },
+      reading: {
+        title: "SECTION 3: READING (20 pts)",
+        type: "ordering_and_tf",
+        instruction: "Read the passages for Ordering (6 pts) and True/False (14 pts).",
+        orderingPart: {
+          pts: 6,
+          instruction: "A. Put the events (A-E) in the correct chronological order (1 to 5). (6 pts)",
+          passageTitle: "Jimmy's University Dilemma",
+          passage: "Three years ago, Jimmy enrolled at university to study physics. During his first year, he joined a rock band with two friends and started playing guitar. After practicing together for a year, the band recorded a song and caught the attention of a music producer. The producer offered them a recording contract, but it required the band to go on a tour across America for six months. Jimmy faced a difficult dilemma: if he dropped out of university, he might lose his chance to get a degree. However, if he stayed at university, he would miss a once-in-a-lifetime opportunity in music. After seeking advice from his friends and family, Jimmy decided to take a break from his studies and go on tour. Fortunately, the tour was a massive success, and his parents were very proud of his decision.",
+          items: [
+            "A. A music producer offered Jimmy's band a recording contract and a six-month tour.",
+            "B. Jimmy started studying physics at university three years ago.",
+            "C. Jimmy took a break from university and went on a successful music tour.",
+            "D. Jimmy joined a band with two friends during his first year of study.",
+            "E. Jimmy faced a tough decision between staying at university or pursuing music."
+          ],
+          answers: { A: "3", B: "1", C: "5", D: "2", E: "4" }
+        },
+        tfPart: {
+          pts: 14,
+          instruction: "B. Read the passage below and decide whether each statement (1-10) is True (T) or False (F). (14 pts)",
+          passageTitle: "Life Choices and Digital Communication in the 21st Century",
+          passage: "Throughout our lives, every individual reaches important crossroads where key decisions must be made. In recent decades, technology and modern communication have transformed how people make these life decisions and maintain relationships.\n\nIn the past, staying in touch was difficult and costly. Today, social media platforms and instant messaging allow people to communicate instantly, regardless of distance. For instance, couples on honeymoons can share photos in real time, and relatives can easily celebrate major life events such as births, engagements, and anniversaries from anywhere in the world.\n\nHowever, modern communication also introduces unique dilemmas. Psychologists note that if people spend too much time online, they may feel disconnected from real-life interactions. Furthermore, when individuals compare their daily lives to the highlighted posts of others, they might feel anxious or dissatisfied.\n\nWhen facing major life dilemmas, experts suggest seeking balanced advice. Talking to experienced friends or family members can provide helpful perspective. Ultimately, while interactive technology provides valuable tools for staying connected, true personal fulfillment comes from making thoughtful choices and nurturing meaningful real-world relationships.",
+          statements: [
+            "1. In the past, staying in touch with distant family members was cheap and easy.",
+            "2. Social media allows people to share photos and news in real time.",
+            "3. Relatives can celebrate life events like engagements regardless of where they live.",
+            "4. Spending too much time online can make people feel disconnected from real life.",
+            "5. The passage suggests that online posts always represent a realistic view of daily life.",
+            "6. Comparing oneself to others online can lead to feelings of anxiety or dissatisfaction.",
+            "7. Experts advise making major life decisions completely alone without talking to anyone.",
+            "8. Seeking advice from experienced family members can help when facing a dilemma.",
+            "9. The text claims that technology is the only source of personal fulfillment.",
+            "10. The main message of the passage is that thoughtful choices and real-world relationships lead to fulfillment."
+          ],
+          answers: ["F", "T", "T", "T", "F", "T", "F", "T", "F", "T"]
+        }
+      },
+      writing: {
+        title: "SECTION 4: WRITING (20 pts)",
+        instruction: "Choose ONE topic to write a paragraph around 150 words using First Conditional, Second Conditional, or modal verbs.",
+        topics: [
+          { id: 1, title: "Topic 1: Major Life Decision", desc: "Write a paragraph describing a major decision or dilemma you are currently facing or might face in the future." },
+          { id: 2, title: "Topic 2: Digital vs Real World", desc: "Write a paragraph giving advice on how young adults can balance online social media use with real-world relationships." }
+        ]
+      }
+    },
+    answerKeyTitle: "🔑 ANSWER KEY (Units 11 and 12)"
+  }
+];
+
+function App() {
+  const [activeSetId, setActiveSetId] = useState(null);
+  const [activeTab, setActiveTab] = useState('vocab');
+  const [userAnswers, setUserAnswers] = useState({});
+  const [examSubmitted, setExamSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(80 * 60);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [showAnswerKey, setShowAnswerKey] = useState(false);
+  const [finalScore, setFinalScore] = useState({ earned: 0, total: 80 });
+
+  // Load progress from LocalStorage
+  useEffect(() => {
+    let savedState = null; try { savedState = localStorage.getItem('english_exam_progress'); } catch (e) {}
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.activeSetId) { setActiveSetId(parsed.activeSetId); if (!parsed.examSubmitted) setTimerRunning(true); }
+        if (parsed.userAnswers) setUserAnswers(parsed.userAnswers);
+        if (parsed.examSubmitted) setExamSubmitted(parsed.examSubmitted);
+        if (parsed.timeLeft !== undefined) setTimeLeft(parsed.timeLeft);
+        if (parsed.finalScore) setFinalScore(parsed.finalScore);
+      } catch (e) {
+        console.error("Failed to load saved state", e);
+      }
+    }
+  }, []);
+
+  // Save progress to LocalStorage
+  useEffect(() => {
+    const stateToSave = {
+      activeSetId,
+      userAnswers,
+      examSubmitted,
+      timeLeft,
+      finalScore
+    };
+    try { localStorage.setItem('english_exam_progress', JSON.stringify(stateToSave)); } catch (e) {}
+  }, [activeSetId, userAnswers, examSubmitted, timeLeft, finalScore]);
+
+  // Timer Effect
+  useEffect(() => {
+    let timer = null;
+    if (timerRunning && timeLeft > 0 && !examSubmitted) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !examSubmitted && timerRunning) {
+      handleAutoSubmit();
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [timerRunning, timeLeft, examSubmitted]);
+
+  const activeSet = EXAM_DATABASE.find(s => s.id === activeSetId);
+
+  const startExam = (setId) => {
+    setActiveSetId(setId);
+    setActiveTab('vocab');
+    setUserAnswers({});
+    setExamSubmitted(false);
+    setTimeLeft(80 * 60);
+    setTimerRunning(true);
+    setShowAnswerKey(false);
+  };
+
+  const handleInputChange = (key, value) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const calculateScore = () => {
+    if (!activeSet) return { earned: 0, total: 80 };
+
+    let earnedPoints = 0;
+    const sec = activeSet.sections;
+
+    // SECTION I: VOCABULARY (30 pts)
+    // A. Matching (10 pts) -> 1 pt each
+    if (sec.vocab.matching) {
+      Object.entries(sec.vocab.matching.answers).forEach(([qId, corrAns]) => {
+        const uAns = userAnswers[`matching_${qId}`];
+        if (uAns && uAns.trim().toUpperCase() === corrAns.toUpperCase()) {
+          earnedPoints += 1;
+        }
+      });
+    }
+
+    // B. Fill Paragraph (10 pts) -> 1 pt each
+    if (sec.vocab.fillParagraph) {
+      Object.entries(sec.vocab.fillParagraph.answers).forEach(([qId, corrAns]) => {
+        const uAns = userAnswers[`fill_${qId}`];
+        if (uAns && uAns.trim().toUpperCase() === corrAns.toUpperCase()) {
+          earnedPoints += 1;
+        }
+      });
+    }
+
+    // C. Short Answer / MCQ (10 pts) -> 1 pt each
+    if (sec.vocab.shortAnswer) {
+      if (sec.vocab.shortAnswer.mcqFormat) {
+        Object.entries(sec.vocab.shortAnswer.answers).forEach(([qId, corrAns]) => {
+          const uAns = userAnswers[`vocab_mcq_${qId}`];
+          if (uAns && uAns.trim().toUpperCase() === corrAns.toUpperCase()) {
+            earnedPoints += 1;
+          }
+        });
+      } else {
+        sec.vocab.shortAnswer.answers.forEach((corrAns, idx) => {
+          const uAns = userAnswers[`vocab_sa_${idx}`];
+          if (uAns && uAns.trim().toLowerCase() === corrAns.toLowerCase()) {
+            earnedPoints += 1;
+          }
+        });
+      }
+    }
+
+    // SECTION II: GRAMMAR (30 pts)
+    // A. Verb Forms / MCQ (10 pts)
+    if (sec.grammar.verbForms) {
+      if (sec.grammar.verbForms.mcqFormat) {
+        Object.entries(sec.grammar.verbForms.answers).forEach(([qId, corrAns]) => {
+          const uAns = userAnswers[`grammar_vf_mcq_${qId}`];
+          if (uAns && uAns.trim().toUpperCase() === corrAns.toUpperCase()) {
+            earnedPoints += 1;
+          }
+        });
+      } else {
+        sec.grammar.verbForms.answers.forEach((corrAns, idx) => {
+          const uAns = userAnswers[`grammar_vf_${idx}`];
+          if (uAns && uAns.trim().toLowerCase() === corrAns.toLowerCase()) {
+            earnedPoints += 1;
+          }
+        });
+      }
+    }
+
+    // B. MCQ (10 pts)
+    if (sec.grammar.mcq) {
+      Object.entries(sec.grammar.mcq.answers).forEach(([qId, corrAns]) => {
+        const uAns = userAnswers[`grammar_mcq_${qId}`];
+        if (uAns && uAns.trim().toUpperCase() === corrAns.toUpperCase()) {
+          earnedPoints += 1;
+        }
+      });
+    }
+
+    // B/C Short Answer or Rearrange (10 pts)
+    if (sec.grammar.shortAnswer) {
+      sec.grammar.shortAnswer.answers.forEach((corrAns, idx) => {
+        const uAns = userAnswers[`grammar_sa_${idx}`];
+        if (uAns && uAns.trim().toLowerCase() === corrAns.toLowerCase()) {
+          earnedPoints += 1;
+        }
+      });
+    }
+
+    if (sec.grammar.rearrange) {
+      sec.grammar.rearrange.answers.forEach((corrAns, idx) => {
+        const uAns = userAnswers[`grammar_re_${idx}`];
+        const cleanU = (uAns || '').replace(/[\s\.]+/g, '').toLowerCase();
+        const cleanC = corrAns.replace(/[\s\.]+/g, '').toLowerCase();
+        if (cleanU && cleanU === cleanC) {
+          earnedPoints += 1;
+        }
+      });
+    }
+
+    // SECTION III: READING (20 pts)
+    if (sec.reading.type === 'tf') {
+      sec.reading.answers.forEach((corrAns, idx) => {
+        const uAns = userAnswers[`reading_tf_${idx}`];
+        if (uAns && uAns.toUpperCase() === corrAns) {
+          earnedPoints += 2; // 10 questions x 2 pts = 20 pts
+        }
+      });
+    } else if (sec.reading.type === 'ordering_and_tf') {
+      // Ordering 6 pts (1 pt each)
+      if (sec.reading.orderingPart) {
+        Object.entries(sec.reading.orderingPart.answers).forEach(([itemKey, corrAns]) => {
+          const uAns = userAnswers[`reading_order_${itemKey}`];
+          if (uAns && uAns.trim() === corrAns) {
+            earnedPoints += 1;
+          }
+        });
+      }
+      // TF 14 pts (2 pts each)
+      if (sec.reading.tfPart) {
+        sec.reading.tfPart.answers.forEach((corrAns, idx) => {
+          const uAns = userAnswers[`reading_tf_${idx}`];
+          if (uAns && uAns.toUpperCase() === corrAns) {
+            earnedPoints += 2;
+          }
+        });
+      }
+    }
+
+    const n = (x) => (Array.isArray(x) ? x.length : Object.keys(x).length);
+    let maxPts = 0;
+    if (sec.vocab.matching) maxPts += n(sec.vocab.matching.answers);
+    if (sec.vocab.fillParagraph) maxPts += n(sec.vocab.fillParagraph.answers);
+    if (sec.vocab.shortAnswer) maxPts += n(sec.vocab.shortAnswer.answers);
+    if (sec.grammar.verbForms) maxPts += n(sec.grammar.verbForms.answers);
+    if (sec.grammar.mcq) maxPts += n(sec.grammar.mcq.answers);
+    if (sec.grammar.shortAnswer) maxPts += n(sec.grammar.shortAnswer.answers);
+    if (sec.grammar.rearrange) maxPts += n(sec.grammar.rearrange.answers);
+    if (sec.reading.type === 'tf') maxPts += 2 * n(sec.reading.answers);
+    else {
+      if (sec.reading.orderingPart) maxPts += n(sec.reading.orderingPart.answers);
+      if (sec.reading.tfPart) maxPts += 2 * n(sec.reading.tfPart.answers);
+    }
+    return { earned: earnedPoints, total: maxPts };
+  };
+
+  const handleAutoSubmit = () => {
+    const scores = calculateScore();
+    setFinalScore(scores);
+    setExamSubmitted(true);
+    setTimerRunning(false);
+  };
+
+  const resetExam = () => {
+    setUserAnswers({});
+    setExamSubmitted(false);
+    setTimeLeft(80 * 60);
+    setTimerRunning(true);
+    setShowAnswerKey(false);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getWordCount = (text) => {
+    if (!text) return 0;
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  };
+
+  // Check how many questions answered
+  const getAnsweredCount = () => {
+    if (!activeSet) return 0;
+    return Object.keys(userAnswers).filter(k => userAnswers[k] && userAnswers[k].trim() !== '').length;
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 pb-12 print:bg-white print:pb-0">
+      
+      {/* APP NAVBAR (Hidden when printing) */}
+      <header className="sticky z-50 bg-slate-900 text-white shadow-md print:hidden">
+        <div className="max-w-6xl mx-auto gutter py-3 flex flex-wrap justify-between items-center gap-4">
+          <div 
+            onClick={() => setActiveSetId(null)} 
+            className="flex items-center gap-2 font-bold text-lg text-sky-400 cursor-pointer hover:text-sky-300 transition"
+          >
+            <BookOpen className="w-6 h-6" />
+            <span>General English II Exam Portal</span>
+          </div>
+
+          {activeSet && (
+            <div className="flex items-center gap-3">
+              {/* Timer */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold ${timeLeft < 300 ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-800 text-amber-400 border border-slate-700'}`}>
+                <Clock className="w-4 h-4" />
+                <span>{formatTime(timeLeft)}</span>
+              </div>
+
+              {/* Show/Hide Answer Key */}
+              <button 
+                onClick={() => setShowAnswerKey(!showAnswerKey)}
+                className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 transition"
+              >
+                {showAnswerKey ? <EyeOff className="w-4 h-4 text-emerald-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
+                <span>{showAnswerKey ? 'Hide Key' : 'Show Key'}</span>
+              </button>
+
+              {/* Back to Home */}
+              <button 
+                onClick={() => setActiveSetId(null)}
+                className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>All Sets</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* VIEW 1: HOME PAGE / SET SELECTOR */}
+      {!activeSetId && (
+        <main className="max-w-5xl mx-auto gutter py-8">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Final Examination Practice System</h1>
+            <p className="text-slate-600 max-w-2xl mx-auto text-sm">
+              Complete English practice system containing all 7 authentic exam papers (Units 7–12) with auto-grading, timing, and print support.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {EXAM_DATABASE.map((set) => (
+              <div 
+                key={set.id}
+                className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-sky-500 transition cursor-pointer flex flex-col justify-between group"
+                onClick={() => startExam(set.id)}
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="bg-sky-100 text-sky-800 text-xs font-bold px-2.5 py-1 rounded-md">
+                      {set.subtitle}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> {set.duration} mins
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-sky-600 transition mb-1">
+                    {set.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-4">{set.subject}</p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-600">
+                  <span>Total: 100 pts (Auto-graded: 80 pts)</span>
+                  <span className="flex items-center gap-1 text-sky-600 group-hover:translate-x-1 transition-transform">
+                    Start <ChevronRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      )}
+
+      {/* VIEW 2: ACTIVE EXAM SHEET PAGE */}
+      {activeSet && (
+        <main className="max-w-4xl mx-auto gutter py-6">
+          
+          {/* EXAM PAPER CARD CONTAINER */}
+          <div className="bg-white border border-slate-200 shadow-md rounded-lg p-6 md:p-10 print:border-none print:shadow-none print:p-0">
+            
+            {/* OFFICIAL EXAM HEADER */}
+            <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center">
+              <h1 className="text-2xl font-black text-slate-900 tracking-wide uppercase">{activeSet.title}</h1>
+              <div className="flex flex-wrap justify-between items-center text-xs md:text-sm font-bold text-slate-700 mt-3 px-2">
+                <span>{activeSet.subtitle}</span>
+                <span>Subject: {activeSet.subject}</span>
+                <span>Time Allowed: {activeSet.duration} minutes</span>
+                <span>Total score: {examSubmitted ? `${finalScore.earned} / ${finalScore.total} (+ 20 Writing)` : '...... / 100'}</span>
+              </div>
+            </div>
+
+            {/* SUBMISSION STATUS / SCORE BANNER */}
+            {examSubmitted && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6 text-center print:hidden">
+                <div className="flex items-center justify-center gap-2 text-emerald-800 font-bold text-lg mb-1">
+                  <Award className="w-6 h-6 text-emerald-600" />
+                  <span>Exam Completed & Auto-Graded!</span>
+                </div>
+                <p className="text-sm text-emerald-700">
+                  Auto-Graded Objective Score: <strong className="text-emerald-900 text-base">{finalScore.earned} / {finalScore.total} pts</strong> ({(finalScore.earned / finalScore.total * 100).toFixed(1)}%)
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Section IV (Writing 20 pts) requires manual evaluation.</p>
+                <button 
+                  onClick={resetExam}
+                  className="mt-3 inline-flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-emerald-500 transition"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Retry Exam
+                </button>
+              </div>
+            )}
+
+            {/* SECTION NAV TABS (Hidden in Print) */}
+            <div className="flex overflow-x-auto gap-2 border-b border-slate-200 mb-6 pb-2 print:hidden">
+              <button 
+                onClick={() => setActiveTab('vocab')}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap ${activeTab === 'vocab' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              >
+                SECTION I: VOCABULARY (30 pts)
+              </button>
+              <button 
+                onClick={() => setActiveTab('grammar')}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap ${activeTab === 'grammar' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              >
+                SECTION II: GRAMMAR (30 pts)
+              </button>
+              <button 
+                onClick={() => setActiveTab('reading')}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap ${activeTab === 'reading' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              >
+                SECTION III: READING (20 pts)
+              </button>
+              <button 
+                onClick={() => setActiveTab('writing')}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition whitespace-nowrap ${activeTab === 'writing' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              >
+                SECTION IV: WRITING (20 pts)
+              </button>
+            </div>
+
+            {/* SECTION I: VOCABULARY */}
+            <div className={`space-y-8 ${activeTab === 'vocab' ? 'block' : 'hidden print:block'}`}>
+              <h2 className="text-base font-bold bg-slate-100 text-sky-900 border-l-4 border-sky-600 px-3 py-1.5 uppercase">
+                {activeSet.sections.vocab.title}
+              </h2>
+
+              {/* Part A: Matching */}
+              {activeSet.sections.vocab.matching && (
+                <div>
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.vocab.matching.instruction}</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {/* Column A */}
+                    <div className="border border-slate-200 rounded-md p-3 bg-slate-50 space-y-2">
+                      <h4 className="font-bold text-xs uppercase text-slate-500 border-b pb-1 mb-2">Column A</h4>
+                      {activeSet.sections.vocab.matching.columnA.map(item => (
+                        <div key={item.id} className="text-xs font-semibold text-slate-800">{item.text}</div>
+                      ))}
+                    </div>
+                    {/* Column B */}
+                    <div className="border border-slate-200 rounded-md p-3 bg-slate-50 space-y-2">
+                      <h4 className="font-bold text-xs uppercase text-slate-500 border-b pb-1 mb-2">Column B</h4>
+                      {activeSet.sections.vocab.matching.columnB.map(item => (
+                        <div key={item.id} className="text-xs font-medium text-slate-700">{item.text}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Matching Dropdowns / Input Grid */}
+                  <div className="mt-4">
+                    <p className="font-bold text-xs text-slate-700 mb-2">Write your answers here:</p>
+                    <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+                      {activeSet.sections.vocab.matching.columnA.map(item => {
+                        const qId = item.id;
+                        const userVal = userAnswers[`matching_${qId}`] || '';
+                        const corrVal = activeSet.sections.vocab.matching.answers[qId];
+                        const isCorrect = examSubmitted && userVal.trim().toUpperCase() === corrVal.toUpperCase();
+                        const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                        return (
+                          <div key={qId} className="flex flex-col items-center">
+                            <span className="text-xs font-bold mb-1">{qId}</span>
+                            <select
+                              value={userVal}
+                              onChange={(e) => handleInputChange(`matching_${qId}`, e.target.value)}
+                              disabled={examSubmitted}
+                              className={`w-full text-center font-bold text-xs p-1.5 border rounded outline-none ${
+                                isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                                'border-slate-300 focus:border-sky-500'
+                              }`}
+                            >
+                              <option value="">--</option>
+                              {["A","B","C","D","E","F","G","H","I","J"].map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                            {examSubmitted && (
+                              <span className="text-[10px] font-bold text-slate-500 mt-0.5">[{corrVal}]</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Part B: Fill in Paragraph */}
+              {activeSet.sections.vocab.fillParagraph && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.vocab.fillParagraph.instruction}</p>
+                  
+                  {/* Word Box */}
+                  <div className="bg-slate-50 border border-slate-300 rounded-md p-3 mb-4 text-xs font-semibold leading-relaxed flex flex-wrap gap-x-4 gap-y-1 text-slate-800">
+                    {activeSet.sections.vocab.fillParagraph.box.map((w, idx) => (
+                      <span key={idx}>{w}</span>
+                    ))}
+                  </div>
+
+                  {/* Paragraph Text with Embedded Inline Inputs */}
+                  <div className="text-sm leading-relaxed text-slate-800 bg-white p-4 border border-slate-200 rounded-md">
+                    {activeSet.sections.vocab.fillParagraph.passage.split('\n').map((paragraph, pIdx) => (
+                      <p key={pIdx} className="mb-3">
+                        {paragraph.split(/(?=\(\d+\))/g).map((chunk, cIdx) => {
+                          const match = chunk.match(/\((\d+)\)\s*_____/);
+                          if (match) {
+                            const blankNum = match[1];
+                            const userVal = userAnswers[`fill_${blankNum}`] || '';
+                            const corrVal = activeSet.sections.vocab.fillParagraph.answers[blankNum];
+                            const isCorrect = examSubmitted && userVal.trim().toUpperCase() === corrVal.toUpperCase();
+                            const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                            return (
+                              <span key={cIdx}>
+                                ({blankNum}){' '}
+                                <select
+                                  value={userVal}
+                                  onChange={(e) => handleInputChange(`fill_${blankNum}`, e.target.value)}
+                                  disabled={examSubmitted}
+                                  className={`inline-block mx-1 font-bold text-xs p-1 border rounded outline-none ${
+                                    isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                    isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                                    'border-slate-300 focus:border-sky-500'
+                                  }`}
+                                >
+                                  <option value="">_____</option>
+                                  {["A","B","C","D","E","F","G","H","I","J"].map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                  ))}
+                                </select>
+                                {examSubmitted && (
+                                  <span className="text-xs font-bold text-emerald-600 mr-1">[{corrVal}]</span>
+                                )}
+                                {chunk.replace(/\(\d+\)\s*_____/, '')}
+                              </span>
+                            );
+                          }
+                          return <span key={cIdx}>{chunk}</span>;
+                        })}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Part C: Short Answer / MCQ */}
+              {activeSet.sections.vocab.shortAnswer && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.vocab.shortAnswer.instruction}</p>
+                  
+                  {activeSet.sections.vocab.shortAnswer.mcqFormat ? (
+                    <div className="space-y-4">
+                      {activeSet.sections.vocab.shortAnswer.questions.map(q => {
+                        const userVal = userAnswers[`vocab_mcq_${q.id}`] || '';
+                        const corrVal = activeSet.sections.vocab.shortAnswer.answers[q.id];
+                        const isCorrect = examSubmitted && userVal === corrVal;
+                        const isWrong = examSubmitted && userVal !== '' && !isCorrect;
+
+                        return (
+                          <div key={q.id} className="text-sm">
+                            <p className="font-semibold text-slate-800 mb-1">{q.text}</p>
+                            <div className="flex flex-wrap gap-4 pl-4">
+                              {q.options.map(opt => {
+                                const letter = opt.charAt(0);
+                                return (
+                                  <label key={opt} className={`cursor-pointer font-medium text-xs flex items-center gap-1.5 p-1 rounded ${
+                                    examSubmitted && letter === corrVal ? 'bg-emerald-100 text-emerald-900 font-bold' : ''
+                                  }`}>
+                                    <input 
+                                      type="radio"
+                                      name={`vocab_mcq_${q.id}`}
+                                      value={letter}
+                                      checked={userVal === letter}
+                                      onChange={(e) => handleInputChange(`vocab_mcq_${q.id}`, e.target.value)}
+                                      disabled={examSubmitted}
+                                      className="accent-sky-600"
+                                    />
+                                    <span>{opt}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeSet.sections.vocab.shortAnswer.questions.map((qText, idx) => {
+                        const userVal = userAnswers[`vocab_sa_${idx}`] || '';
+                        const corrVal = activeSet.sections.vocab.shortAnswer.answers[idx];
+                        const isCorrect = examSubmitted && userVal.trim().toLowerCase() === corrVal.toLowerCase();
+                        const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                        return (
+                          <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
+                            <span className="font-medium text-slate-800 flex-1">{qText}</span>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={userVal}
+                                onChange={(e) => handleInputChange(`vocab_sa_${idx}`, e.target.value)}
+                                disabled={examSubmitted}
+                                placeholder="Your answer..."
+                                className={`px-2.5 py-1 text-xs font-semibold border rounded outline-none w-48 ${
+                                  isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                  isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                                  'border-slate-300 focus:border-sky-500'
+                                }`}
+                              />
+                              {examSubmitted && (
+                                <span className="text-xs font-bold text-emerald-700">[{corrVal}]</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION II: GRAMMAR */}
+            <div className={`space-y-8 ${activeTab === 'grammar' ? 'block' : 'hidden print:block'}`}>
+              <h2 className="text-base font-bold bg-slate-100 text-sky-900 border-l-4 border-sky-600 px-3 py-1.5 uppercase">
+                {activeSet.sections.grammar.title}
+              </h2>
+
+              {/* Part A: Verb Forms */}
+              {activeSet.sections.grammar.verbForms && (
+                <div>
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.grammar.verbForms.instruction}</p>
+                  
+                  {activeSet.sections.grammar.verbForms.mcqFormat ? (
+                    <div className="space-y-4">
+                      {activeSet.sections.grammar.verbForms.questions.map(q => {
+                        const userVal = userAnswers[`grammar_vf_mcq_${q.id}`] || '';
+                        const corrVal = activeSet.sections.grammar.verbForms.answers[q.id];
+
+                        return (
+                          <div key={q.id} className="text-sm">
+                            <p className="font-semibold text-slate-800 mb-1">{q.text}</p>
+                            <div className="flex flex-wrap gap-4 pl-4">
+                              {q.options.map(opt => {
+                                const letter = opt.charAt(0);
+                                return (
+                                  <label key={opt} className={`cursor-pointer font-medium text-xs flex items-center gap-1.5 p-1 rounded ${
+                                    examSubmitted && letter === corrVal ? 'bg-emerald-100 text-emerald-900 font-bold' : ''
+                                  }`}>
+                                    <input 
+                                      type="radio"
+                                      name={`grammar_vf_mcq_${q.id}`}
+                                      value={letter}
+                                      checked={userVal === letter}
+                                      onChange={(e) => handleInputChange(`grammar_vf_mcq_${q.id}`, e.target.value)}
+                                      disabled={examSubmitted}
+                                      className="accent-sky-600"
+                                    />
+                                    <span>{opt}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeSet.sections.grammar.verbForms.questions.map((qText, idx) => {
+                        const userVal = userAnswers[`grammar_vf_${idx}`] || '';
+                        const corrVal = activeSet.sections.grammar.verbForms.answers[idx];
+                        const isCorrect = examSubmitted && userVal.trim().toLowerCase() === corrVal.toLowerCase();
+                        const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                        return (
+                          <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
+                            <span className="font-medium text-slate-800 flex-1">{qText}</span>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="text"
+                                value={userVal}
+                                onChange={(e) => handleInputChange(`grammar_vf_${idx}`, e.target.value)}
+                                disabled={examSubmitted}
+                                placeholder="Verb form..."
+                                className={`px-2.5 py-1 text-xs font-semibold border rounded outline-none w-48 ${
+                                  isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                  isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                                  'border-slate-300 focus:border-sky-500'
+                                }`}
+                              />
+                              {examSubmitted && (
+                                <span className="text-xs font-bold text-emerald-700">[{corrVal}]</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Part B: MCQ */}
+              {activeSet.sections.grammar.mcq && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.grammar.mcq.instruction}</p>
+                  
+                  <div className="space-y-4">
+                    {activeSet.sections.grammar.mcq.questions.map(q => {
+                      const userVal = userAnswers[`grammar_mcq_${q.id}`] || '';
+                      const corrVal = activeSet.sections.grammar.mcq.answers[q.id];
+
+                      return (
+                        <div key={q.id} className="text-sm">
+                          <p className="font-semibold text-slate-800 mb-1">{q.text}</p>
+                          <div className="flex flex-wrap gap-4 pl-4">
+                            {q.options.map(opt => {
+                              const letter = opt.charAt(0);
+                              return (
+                                <label key={opt} className={`cursor-pointer font-medium text-xs flex items-center gap-1.5 p-1 rounded ${
+                                  examSubmitted && letter === corrVal ? 'bg-emerald-100 text-emerald-900 font-bold' : ''
+                                }`}>
+                                  <input 
+                                    type="radio"
+                                    name={`grammar_mcq_${q.id}`}
+                                    value={letter}
+                                    checked={userVal === letter}
+                                    onChange={(e) => handleInputChange(`grammar_mcq_${q.id}`, e.target.value)}
+                                    disabled={examSubmitted}
+                                    className="accent-sky-600"
+                                  />
+                                  <span>{opt}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Part C: Sentence Rearrange or Short Answer */}
+              {activeSet.sections.grammar.rearrange && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.grammar.rearrange.instruction}</p>
+                  
+                  <div className="space-y-4">
+                    {activeSet.sections.grammar.rearrange.questions.map((qText, idx) => {
+                      const userVal = userAnswers[`grammar_re_${idx}`] || '';
+                      const corrVal = activeSet.sections.grammar.rearrange.answers[idx];
+                      const cleanU = (userVal || '').replace(/[\s\.]+/g, '').toLowerCase();
+                      const cleanC = corrVal.replace(/[\s\.]+/g, '').toLowerCase();
+                      const isCorrect = examSubmitted && cleanU === cleanC;
+                      const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                      return (
+                        <div key={idx} className="text-sm space-y-1">
+                          <p className="font-medium text-slate-800">{qText}</p>
+                          <input 
+                            type="text"
+                            value={userVal}
+                            onChange={(e) => handleInputChange(`grammar_re_${idx}`, e.target.value)}
+                            disabled={examSubmitted}
+                            placeholder="Type complete sentence here..."
+                            className={`w-full px-3 py-1.5 text-xs font-medium border rounded outline-none ${
+                              isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                              isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                              'border-slate-300 focus:border-sky-500'
+                            }`}
+                          />
+                          {examSubmitted && (
+                            <p className="text-xs font-bold text-emerald-700">✓ Answer: {corrVal}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeSet.sections.grammar.shortAnswer && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="font-bold text-sm mb-3 text-slate-900">{activeSet.sections.grammar.shortAnswer.instruction}</p>
+                  <div className="space-y-3">
+                    {activeSet.sections.grammar.shortAnswer.questions.map((qText, idx) => {
+                      const userVal = userAnswers[`grammar_sa_${idx}`] || '';
+                      const corrVal = activeSet.sections.grammar.shortAnswer.answers[idx];
+                      const isCorrect = examSubmitted && userVal.trim().toLowerCase() === corrVal.toLowerCase();
+                      const isWrong = examSubmitted && userVal.trim() !== '' && !isCorrect;
+
+                      return (
+                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
+                          <span className="font-medium text-slate-800 flex-1">{qText}</span>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="text"
+                              value={userVal}
+                              onChange={(e) => handleInputChange(`grammar_sa_${idx}`, e.target.value)}
+                              disabled={examSubmitted}
+                              placeholder="Answer..."
+                              className={`px-2.5 py-1 text-xs font-semibold border rounded outline-none w-48 ${
+                                isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                isWrong ? 'bg-red-100 border-red-500 text-red-900' :
+                                'border-slate-300 focus:border-sky-500'
+                              }`}
+                            />
+                            {examSubmitted && (
+                              <span className="text-xs font-bold text-emerald-700">[{corrVal}]</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION III: READING */}
+            <div className={`space-y-8 ${activeTab === 'reading' ? 'block' : 'hidden print:block'}`}>
+              <h2 className="text-base font-bold bg-slate-100 text-sky-900 border-l-4 border-sky-600 px-3 py-1.5 uppercase">
+                {activeSet.sections.reading.title}
+              </h2>
+
+              <p className="font-bold text-sm text-slate-900">{activeSet.sections.reading.instruction}</p>
+
+              {/* Passage Box */}
+              {activeSet.sections.reading.passage && (
+                <div className="bg-amber-50/60 border-l-4 border-amber-400 p-4 rounded-r-md">
+                  <h4 className="font-bold text-sm text-amber-900 mb-2">{activeSet.sections.reading.passageTitle}</h4>
+                  {activeSet.sections.reading.passage.split('\n\n').map((para, pIdx) => (
+                    <p key={pIdx} className="text-xs leading-relaxed text-slate-800 mb-2">{para}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* True / False Type */}
+              {activeSet.sections.reading.type === 'tf' && (
+                <div className="space-y-3">
+                  {activeSet.sections.reading.statements.map((stmt, idx) => {
+                    const userVal = userAnswers[`reading_tf_${idx}`] || '';
+                    const corrVal = activeSet.sections.reading.answers[idx];
+                    const isCorrect = examSubmitted && userVal === corrVal;
+                    const isWrong = examSubmitted && userVal !== '' && !isCorrect;
+
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm border-b border-slate-100 pb-2">
+                        <span className="font-medium text-slate-800 flex-1">{stmt}</span>
+                        <div className="flex items-center gap-2">
+                          {["T", "F"].map(opt => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => handleInputChange(`reading_tf_${idx}`, opt)}
+                              disabled={examSubmitted}
+                              className={`px-3 py-1 text-xs font-bold rounded border transition ${
+                                userVal === opt 
+                                  ? (examSubmitted 
+                                      ? (isCorrect ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-red-600 text-white border-red-600')
+                                      : 'bg-sky-600 text-white border-sky-600')
+                                  : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                          {examSubmitted && (
+                            <span className="text-xs font-bold text-emerald-700 ml-2">[{corrVal}]</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Ordering and TF Combination Type (Sets 5, 6, 7) */}
+              {activeSet.sections.reading.type === 'ordering_and_tf' && (
+                <div className="space-y-6">
+                  {/* Part A: Ordering */}
+                  {activeSet.sections.reading.orderingPart && (
+                    <div>
+                      <p className="font-bold text-sm text-slate-900 mb-2">{activeSet.sections.reading.orderingPart.instruction}</p>
+                      
+                      {activeSet.sections.reading.orderingPart.passage && (
+                        <div className="bg-amber-50/60 border-l-4 border-amber-400 p-4 rounded-r-md mb-3">
+                          <h4 className="font-bold text-sm text-amber-900 mb-1">{activeSet.sections.reading.orderingPart.passageTitle}</h4>
+                          <p className="text-xs leading-relaxed text-slate-800">{activeSet.sections.reading.orderingPart.passage}</p>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        {activeSet.sections.reading.orderingPart.items.map((itemText, idx) => {
+                          const itemKey = itemText.match(/([A-F])\./)?.[1] || idx;
+                          const userVal = userAnswers[`reading_order_${itemKey}`] || '';
+                          const corrVal = activeSet.sections.reading.orderingPart.answers[itemKey];
+                          const isCorrect = examSubmitted && userVal === corrVal;
+
+                          return (
+                            <div key={idx} className="flex items-center gap-3 text-xs font-medium text-slate-800">
+                              <input 
+                                type="text"
+                                maxLength={1}
+                                value={userVal}
+                                onChange={(e) => handleInputChange(`reading_order_${itemKey}`, e.target.value)}
+                                disabled={examSubmitted}
+                                placeholder="#"
+                                className={`w-8 h-8 text-center font-bold text-xs border rounded outline-none ${
+                                  isCorrect ? 'bg-emerald-100 border-emerald-500 text-emerald-900' :
+                                  'border-slate-300 focus:border-sky-500'
+                                }`}
+                              />
+                              <span className="flex-1">{itemText}</span>
+                              {examSubmitted && (
+                                <span className="font-bold text-emerald-700">[{corrVal}]</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Part B: TF */}
+                  {activeSet.sections.reading.tfPart && (
+                    <div className="pt-4 border-t border-slate-200">
+                      <p className="font-bold text-sm text-slate-900 mb-3">{activeSet.sections.reading.tfPart.instruction}</p>
+                      
+                      {activeSet.sections.reading.tfPart.passage && (
+                        <div className="bg-amber-50/60 border-l-4 border-amber-400 p-4 rounded-r-md mb-4">
+                          <h4 className="font-bold text-sm text-amber-900 mb-1">{activeSet.sections.reading.tfPart.passageTitle}</h4>
+                          {activeSet.sections.reading.tfPart.passage.split('\n\n').map((p, pIdx) => (
+                            <p key={pIdx} className="text-xs leading-relaxed text-slate-800 mb-2">{p}</p>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {activeSet.sections.reading.tfPart.statements.map((stmt, idx) => {
+                          const userVal = userAnswers[`reading_tf_${idx}`] || '';
+                          const corrVal = activeSet.sections.reading.tfPart.answers[idx];
+                          const isCorrect = examSubmitted && userVal === corrVal;
+
+                          return (
+                            <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm border-b border-slate-100 pb-2">
+                              <span className="font-medium text-slate-800 flex-1">{stmt}</span>
+                              <div className="flex items-center gap-2">
+                                {["T", "F"].map(opt => (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => handleInputChange(`reading_tf_${idx}`, opt)}
+                                    disabled={examSubmitted}
+                                    className={`px-3 py-1 text-xs font-bold rounded border transition ${
+                                      userVal === opt 
+                                        ? (examSubmitted 
+                                            ? (isCorrect ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-red-600 text-white border-red-600')
+                                            : 'bg-sky-600 text-white border-sky-600')
+                                        : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                                {examSubmitted && (
+                                  <span className="text-xs font-bold text-emerald-700 ml-2">[{corrVal}]</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* SECTION IV: WRITING */}
+            <div className={`space-y-6 ${activeTab === 'writing' ? 'block' : 'hidden print:block'}`}>
+              <h2 className="text-base font-bold bg-slate-100 text-sky-900 border-l-4 border-sky-600 px-3 py-1.5 uppercase">
+                {activeSet.sections.writing.title}
+              </h2>
+
+              <p className="font-bold text-sm text-slate-900">{activeSet.sections.writing.instruction}</p>
+
+              {/* Topics Options */}
+              <div className="space-y-3">
+                {activeSet.sections.writing.topics.map(t => (
+                  <div key={t.id} className="p-3 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 className="font-bold text-xs text-sky-900 mb-1">{t.title}</h4>
+                    <p className="text-xs text-slate-700 leading-relaxed">{t.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Writing Text Area */}
+              <div className="pt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="font-bold text-xs text-slate-700">Write your paragraph below:</label>
+                  <span className={`text-xs font-semibold ${getWordCount(userAnswers['writing_text']) > 150 ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    Word count: {getWordCount(userAnswers['writing_text'])} / ~150 words
+                  </span>
+                </div>
+                <textarea
+                  rows={8}
+                  value={userAnswers['writing_text'] || ''}
+                  onChange={(e) => handleInputChange('writing_text', e.target.value)}
+                  disabled={examSubmitted}
+                  placeholder="Type your essay paragraph here..."
+                  className="w-full p-3 border border-slate-300 rounded-md text-xs leading-relaxed outline-none focus:border-sky-500"
+                />
+              </div>
+            </div>
+
+            {/* SUBMIT BUTTON FOOTER (Hidden in Print) */}
+            {!examSubmitted && (
+              <div className="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center print:hidden">
+                <div className="text-xs text-slate-500">
+                  Answered: <strong>{getAnsweredCount()}</strong> inputs
+                </div>
+                <button 
+                  onClick={handleAutoSubmit}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-lg text-sm shadow-sm transition flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" /> Finish & Submit Exam
+                </button>
+              </div>
+            )}
+
+            {/* EMBEDDED ANSWER KEY BOX (Shown when toggled or submitted) */}
+            {(showAnswerKey || examSubmitted) && (
+              <div className="mt-12 pt-6 border-t-2 border-dashed border-emerald-500 bg-emerald-50/40 p-6 rounded-lg text-xs leading-relaxed space-y-4 print:block">
+                <h3 className="font-black text-sm text-emerald-900 uppercase tracking-wide border-b border-emerald-200 pb-2">
+                  {activeSet.answerKeyTitle}
+                </h3>
+
+                {/* Section I Keys */}
+                <div>
+                  <h4 className="font-bold text-emerald-800 uppercase mb-1">SECTION I: VOCABULARY</h4>
+                  {activeSet.sections.vocab.matching && (
+                    <p><strong>A. Matching:</strong> {Object.entries(activeSet.sections.vocab.matching.answers).map(([k, v]) => `${k}-${v}`).join(' | ')}</p>
+                  )}
+                  {activeSet.sections.vocab.fillParagraph && (
+                    <p><strong>B. Fill in blanks:</strong> {Object.entries(activeSet.sections.vocab.fillParagraph.answers).map(([k, v]) => `${k}-${v}`).join(' | ')}</p>
+                  )}
+                  {activeSet.sections.vocab.shortAnswer && (
+                    <p><strong>C. Answers:</strong> {
+                      activeSet.sections.vocab.shortAnswer.mcqFormat 
+                        ? Object.entries(activeSet.sections.vocab.shortAnswer.answers).map(([k, v]) => `${k}-${v}`).join(' | ')
+                        : activeSet.sections.vocab.shortAnswer.answers.join(' | ')
+                    }</p>
+                  )}
+                </div>
+
+                {/* Section II Keys */}
+                <div>
+                  <h4 className="font-bold text-emerald-800 uppercase mb-1">SECTION II: GRAMMAR</h4>
+                  {activeSet.sections.grammar.verbForms && (
+                    <p><strong>A. Verb Forms:</strong> {
+                      activeSet.sections.grammar.verbForms.mcqFormat
+                        ? Object.entries(activeSet.sections.grammar.verbForms.answers).map(([k, v]) => `${k}-${v}`).join(' | ')
+                        : activeSet.sections.grammar.verbForms.answers.join(' | ')
+                    }</p>
+                  )}
+                  {activeSet.sections.grammar.mcq && (
+                    <p><strong>B. Multiple Choice:</strong> {Object.entries(activeSet.sections.grammar.mcq.answers).map(([k, v]) => `${k}-${v}`).join(' | ')}</p>
+                  )}
+                  {activeSet.sections.grammar.rearrange && (
+                    <div>
+                      <strong>C. Rearrange:</strong>
+                      <ol className="list-decimal pl-4 mt-1 space-y-0.5">
+                        {activeSet.sections.grammar.rearrange.answers.map((ans, idx) => (
+                          <li key={idx}>{ans}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  {activeSet.sections.grammar.shortAnswer && (
+                    <p><strong>B. Answers:</strong> {activeSet.sections.grammar.shortAnswer.answers.join(' | ')}</p>
+                  )}
+                </div>
+
+                {/* Section III Keys */}
+                <div>
+                  <h4 className="font-bold text-emerald-800 uppercase mb-1">SECTION III: READING</h4>
+                  {activeSet.sections.reading.type === 'tf' && (
+                    <p>{activeSet.sections.reading.answers.map((ans, idx) => `${idx + 1}-${ans}`).join(' | ')}</p>
+                  )}
+                  {activeSet.sections.reading.type === 'ordering_and_tf' && (
+                    <div>
+                      {activeSet.sections.reading.orderingPart && (
+                        <p><strong>A. Ordering:</strong> {Object.entries(activeSet.sections.reading.orderingPart.answers).map(([k, v]) => `${k}-${v}`).join(' | ')}</p>
+                      )}
+                      {activeSet.sections.reading.tfPart && (
+                        <p><strong>B. True/False:</strong> {activeSet.sections.reading.tfPart.answers.map((ans, idx) => `${idx + 1}-${ans}`).join(' | ')}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </div>
+        </main>
+      )}
+
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</html>
